@@ -3,72 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>通用請款與差旅報銷單</title>
+  <title>企業費用與差旅報銷系統</title>
   <style>
     :root {
-      --bg-main: #181818;
-      --bg-card: #222225;
-      --bg-input: #2c2c30;
-      --border-color: #3e3e44;
+      --bg-body: #121214;
+      --bg-sidebar: #1a1a1e;
+      --bg-card: #222226;
+      --bg-input: #2b2b30;
+      --border-color: #38383e;
       --text-main: #cccccc;
       --text-title: #ffffff;
-      --accent: #007acc;
-      --accent-hover: #0098ff;
-      --danger: #f44336;
-      --success: #4ec9b0;
-      --warning: #ce9178;
+      --accent: #2563eb;
+      --accent-hover: #3b82f6;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --blue-stat: #38bdf8;
     }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .form-container { width: 100%; max-width: 1450px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
+    body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+    /* 左側側邊欄 */
+    .sidebar { width: 230px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 12px; flex-shrink: 0; }
+    .brand-title { font-size: 1.05rem; font-weight: bold; color: var(--text-title); margin-bottom: 24px; padding-left: 10px; }
+    .nav-group-title { font-size: 0.75rem; color: #777; margin: 12px 0 6px 10px; font-weight: 600; text-transform: uppercase; }
     
-    h2 { color: var(--text-title); margin-top: 0; margin-bottom: 20px; font-size: 1.35rem; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
-    .section-title { font-size: 1rem; color: var(--text-title); font-weight: 600; margin: 24px 0 12px 0; display: flex; justify-content: space-between; align-items: center; }
-    
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; }
-    .form-group { display: flex; flex-direction: column; margin-bottom: 12px; }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 6px;
+      color: var(--text-main);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-bottom: 4px;
+      transition: 0.2s;
+    }
+    .nav-item:hover { background: #26262b; color: #fff; }
+    .nav-item.active { background: #222634; color: #60a5fa; font-weight: bold; }
+    .nav-item .icon { font-size: 1.1rem; }
+
+    /* 右側主內容區 */
+    .main-content { flex-grow: 1; overflow-y: auto; padding: 24px 32px; background: var(--bg-body); }
+    .view-container { display: none; }
+    .view-container.active { display: block; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    h2 { color: var(--text-title); font-size: 1.3rem; font-weight: 600; }
+
+    /* 表單與表格 */
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 16px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; }
     .form-group label { font-size: 0.85rem; margin-bottom: 6px; color: #9cdcfe; font-weight: 500; }
     
-    input, select {
+    input, select, textarea {
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       color: #fff;
-      padding: 6px 8px;
+      padding: 7px 10px;
       border-radius: 4px;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       outline: none;
       width: 100%;
     }
-    input:focus, select:focus { border-color: var(--accent); }
-    input[readonly] { background-color: #1e1e1e; color: #888; cursor: not-allowed; }
-    
-    .btn { cursor: pointer; padding: 6px 14px; border-radius: 4px; border: none; font-size: 0.85rem; transition: 0.2s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent-hover); }
+    input[readonly] { background-color: #1a1a1d; color: #888; cursor: not-allowed; }
+
+    .btn { cursor: pointer; padding: 6px 14px; border-radius: 4px; border: none; font-size: 0.85rem; transition: 0.2s; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; }
     .btn-primary { background-color: var(--accent); color: white; }
     .btn-primary:hover { background-color: var(--accent-hover); }
     .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
     .btn-danger:hover { background-color: var(--danger); color: white; }
-    .btn-calc { background-color: #383838; color: #9cdcfe; border: 1px solid #555; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; white-space: nowrap; }
-    .btn-calc:hover { background-color: #4a4a4a; }
-    
-    .dynamic-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 0.85rem; }
-    .dynamic-table th { background-color: #1a1a1a; color: #aaa; font-weight: 500; font-size: 0.8rem; text-align: left; padding: 8px; border: 1px solid var(--border-color); }
-    .dynamic-table td { padding: 6px 4px; border: 1px solid var(--border-color); vertical-align: middle; }
+    .btn-green { background-color: var(--success); color: white; }
+    .btn-green:hover { background-color: #059669; }
 
-    .selector-box {
-      display: flex;
-      flex-wrap: nowrap;
-      gap: 4px;
-      align-items: center;
-      background: #1c1c1f;
-      padding: 4px 6px;
-      border-radius: 4px;
-      border: 1px dashed #3a3a40;
-    }
+    .dynamic-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
+    .dynamic-table th { background-color: #18181c; color: #aaa; font-weight: 500; font-size: 0.8rem; text-align: left; padding: 10px 8px; border: 1px solid var(--border-color); }
+    .dynamic-table td { padding: 8px 6px; border: 1px solid var(--border-color); vertical-align: middle; }
+
+    .selector-box { display: flex; flex-wrap: nowrap; gap: 4px; align-items: center; background: #1c1c1f; padding: 4px 6px; border-radius: 4px; border: 1px dashed #3a3a40; }
     .selector-box select { width: auto; flex-grow: 1; min-width: 0; }
 
+    /* 月報看板 */
+    .filter-bar { background: #1a1a1e; border: 1px solid var(--border-color); border-radius: 6px; padding: 12px 16px; display: flex; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .filter-item { display: flex; flex-direction: column; width: 140px; }
+    .filter-item label { font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    
+    .stats-container { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .stat-box { background: #1a1a1e; border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; text-align: center; }
+    .stat-box .title { font-size: 0.85rem; color: #888; margin-bottom: 6px; }
+    .stat-box .value { font-size: 1.4rem; font-weight: bold; }
+
+    .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+    .tag-travel { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .tag-expense { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .tag-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+
     .summary-card {
-      background: #19191c;
+      background: #18181c;
       border: 1px solid var(--border-color);
       border-radius: 6px;
       padding: 18px;
@@ -79,217 +116,427 @@
     }
     .project-breakdown { border-right: 1px solid var(--border-color); padding-right: 24px; }
     .breakdown-item { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 8px; color: #b5cea8; }
-    
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
     .summary-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--text-title); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px; }
-    .total-amount { color: var(--success); }
 
-    .file-upload-btn {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      background: #333;
-      padding: 4px 6px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      text-align: center;
-      width: 100%;
+    /* Modal */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 800px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+
+    /* 列印專屬 CSS (PDF 匯出用) */
+    @media print {
+      body { background: #fff !important; color: #000 !important; }
+      .sidebar, .filter-bar, .btn, .header-bar button, .modal-overlay { display: none !important; }
+      .main-content { padding: 0 !important; overflow: visible !important; }
+      .card { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; }
+      .dynamic-table { color: #000 !important; border-collapse: collapse !important; width: 100% !important; margin-top: 20px !important; }
+      .dynamic-table th, .dynamic-table td { border: 1px solid #333 !important; color: #000 !important; background: #fff !important; padding: 8px !important; font-size: 10pt !important; }
+      .stat-box { border: 1px solid #333 !important; background: #fff !important; color: #000 !important; }
+      .stat-box .value { color: #000 !important; }
+      .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+      .print-header h1 { font-size: 18pt; margin-bottom: 6px; }
+      .print-header p { font-size: 10pt; color: #555; }
     }
-    .file-upload-btn input[type=file] {
-      position: absolute;
-      left: 0; top: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;
-    }
+    .print-header { display: none; }
   </style>
 </head>
 <body>
 
-<div class="form-container">
-  <h2>綜合請款與差旅報銷月結單</h2>
-
-  <!-- 表頭 -->
-  <div class="grid-3">
-    <div class="form-group">
-      <label>申請日期</label>
-      <input type="date" id="applyDate">
+  <!-- 左側導覽列 -->
+  <div class="sidebar">
+    <div class="brand-title">財務報銷系統</div>
+    
+    <div class="nav-item active" onclick="navigate('expense-list')">
+      <span class="icon">📑</span> 費用申請單
     </div>
-    <div class="form-group">
-      <label>歸屬月份</label>
-      <input type="month" id="billingMonth">
+    
+    <div class="nav-item" onclick="navigate('travel-form')">
+      <span class="icon">✈️</span> 出差旅費申請單
     </div>
-    <div class="form-group">
-      <label>申請人</label>
-      <input type="text" id="currentUserName" value="自動帶入申請人" readonly>
-    </div>
-  </div>
-
-  <!-- 區塊一：費用明細 -->
-  <div class="section-title">
-    <span>費用明細 (高鐵／台鐵／捷運全自動計價)</span>
-    <button type="button" class="btn btn-primary" onclick="addExpenseRow()">+ 新增費用項目</button>
-  </div>
-  <table class="dynamic-table" id="expenseTable">
-    <thead>
-      <tr>
-        <th style="width: 10%;">發生日期</th>
-        <th style="width: 13%;">所屬專案</th>
-        <th style="width: 11%;">費用項目</th>
-        <th style="width: 8%;">金額(NT$)</th>
-        <th style="width: 50%;">起訖地點 / 站點與用途說明</th>
-        <th style="width: 8%;">發票號碼</th>
-        <th style="width: 4%;">憑證</th>
-        <th style="width: 2%;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="date" class="exp-date"></td>
-        <td><select class="proj-select exp-proj" onchange="calculateGrandTotal()"></select></td>
-        <td>
-          <select class="category-select" onchange="onCategoryChange(this)">
-            <option value="">— 請選擇項目 —</option>
-            <option value="HSR">交通-高鐵</option>
-            <option value="TRA">交通-台鐵</option>
-            <option value="MRT">交通-捷運</option>
-            <option value="PARK">交通-停車費</option>
-            <option value="TAXI">交通-計程車</option>
-            <option value="HOTEL">住宿費</option>
-            <option value="MEAL">業務交際/餐費</option>
-            <option value="OTHER">耗材/雜支採購</option>
-          </select>
-        </td>
-        <td><input type="number" class="expense-amt" placeholder="0" oninput="calculateGrandTotal()"></td>
-        <td class="desc-cell"><input type="text" placeholder="起訖地點或用途說明"></td>
-        <td><input type="text" placeholder="選填發票"></td>
-        <td style="text-align:center;"><div class="file-upload-btn">附檔<input type="file"></div></td>
-        <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- 區塊二：開車費用計算 -->
-  <div class="section-title">
-    <span>開車費用計算 (私車公用：6 元/公里)</span>
-    <button type="button" class="btn btn-primary" onclick="addCarMileageRow()">+ 新增出差車程</button>
-  </div>
-  <table class="dynamic-table" id="carMileageTable">
-    <thead>
-      <tr>
-        <th style="width: 10%;">出差日期</th>
-        <th style="width: 15%;">所屬專案</th>
-        <th style="width: 15%;">出發地點</th>
-        <th style="width: 15%;">目的地點</th>
-        <th style="width: 15%;">出差事由</th>
-        <th style="width: 6%; text-align:center;">測距</th>
-        <th style="width: 9%;">往返設定</th>
-        <th style="width: 6%;">里程(km)</th>
-        <th style="width: 7%;">金額(NT$)</th>
-        <th style="width: 2%;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="date" class="mil-date"></td>
-        <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
-        <td><input type="text" class="origin-input" placeholder="出發地點"></td>
-        <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-        <td><input type="text" placeholder="出差事由"></td>
-        <td style="text-align:center;">
-          <button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button>
-        </td>
-        <td>
-          <input type="hidden" class="base-one-way-km" value="0">
-          <select class="trip-type-select" onchange="onTripTypeChange(this, 6)">
-            <option value="1">單程 (1x)</option>
-            <option value="2">來回 (2x)</option>
-          </select>
-        </td>
-        <td><input type="number" class="mileage-km" placeholder="0" oninput="onManualKmInput(this, 6)"></td>
-        <td><input type="number" class="mileage-amt" value="0" readonly style="color:var(--success);"></td>
-        <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- 區塊三：騎車費用計算 -->
-  <div class="section-title">
-    <span>騎車費用計算 (私機公用：3 元/公里)</span>
-    <button type="button" class="btn btn-primary" onclick="addMotorMileageRow()">+ 新增騎車行程</button>
-  </div>
-  <table class="dynamic-table" id="motorMileageTable">
-    <thead>
-      <tr>
-        <th style="width: 10%;">出差日期</th>
-        <th style="width: 15%;">所屬專案</th>
-        <th style="width: 15%;">出發地點</th>
-        <th style="width: 15%;">目的地點</th>
-        <th style="width: 15%;">出差事由</th>
-        <th style="width: 6%; text-align:center;">測距</th>
-        <th style="width: 9%;">往返設定</th>
-        <th style="width: 6%;">里程(km)</th>
-        <th style="width: 7%;">金額(NT$)</th>
-        <th style="width: 2%;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><input type="date" class="mil-date"></td>
-        <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
-        <td><input type="text" class="origin-input" placeholder="出發地點"></td>
-        <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-        <td><input type="text" placeholder="行程事由"></td>
-        <td style="text-align:center;">
-          <button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button>
-        </td>
-        <td>
-          <input type="hidden" class="base-one-way-km" value="0">
-          <select class="trip-type-select" onchange="onTripTypeChange(this, 3)">
-            <option value="1">單程 (1x)</option>
-            <option value="2">來回 (2x)</option>
-          </select>
-        </td>
-        <td><input type="number" class="mileage-km" placeholder="0" oninput="onManualKmInput(this, 3)"></td>
-        <td><input type="number" class="mileage-amt" value="0" readonly style="color:var(--success);"></td>
-        <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
-      </tr>
-    </tbody>
-  </table>
-
-  <!-- 區塊四：結算看板 -->
-  <div class="summary-card">
-    <div class="project-breakdown">
-      <div style="font-weight:600; margin-bottom:12px; color:#fff;">各專案成本分攤匯總</div>
-      <div id="projectSummaryList"></div>
-    </div>
-    <div>
-      <div class="summary-row">
-        <span>發票與憑證報銷小計：</span>
-        <span id="sumExpense">NT$ 0</span>
-      </div>
-      <div class="summary-row">
-        <span>私車公用開車補貼 (6元/km)：</span>
-        <span id="sumCarMileage">NT$ 0</span>
-      </div>
-      <div class="summary-row">
-        <span>私機公用騎車補貼 (3元/km)：</span>
-        <span id="sumMotorMileage">NT$ 0</span>
-      </div>
-      <div class="summary-row" style="color: var(--warning);">
-        <span>扣除已預支款項：</span>
-        <input type="number" id="advanceDeduct" value="0" style="width: 90px; padding: 2px 6px; text-align:right;" oninput="calculateGrandTotal()">
-      </div>
-      <div class="summary-total">
-        <span>本次實退總金額：</span>
-        <span class="total-amount" id="grandTotal">NT$ 0</span>
-      </div>
+    
+    <div class="nav-group-title">費用月報</div>
+    <div class="nav-item" onclick="navigate('report-view')">
+      <span class="icon">📅</span> 費用/差旅月報單
     </div>
   </div>
 
-  <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
-    <button type="button" class="btn" style="background:#444; color:#fff; padding: 10px 20px;">儲存草稿</button>
-    <button type="button" class="btn btn-primary" style="padding: 10px 24px; font-weight:bold;" onclick="alert('請款單已成功送出！')">送出整月請款單</button>
+  <!-- 主視圖區 -->
+  <div class="main-content">
+
+    <!-- 1. 費用申請單列表 (截圖一) -->
+    <div id="view-expense-list" class="view-container active">
+      <div class="card">
+        <div class="header-bar">
+          <h2>費用申請單</h2>
+          <button class="btn btn-primary" onclick="navigate('expense-form')">+ 新增申請單</button>
+        </div>
+        <table class="dynamic-table">
+          <thead>
+            <tr>
+              <th style="width: 5%; text-align:center;">#</th>
+              <th style="width: 15%;">填單日期</th>
+              <th style="width: 15%;">申請人</th>
+              <th style="width: 25%;">關聯專案</th>
+              <th style="width: 12%; text-align:center;">狀態</th>
+              <th style="width: 15%;">金額合計</th>
+              <th style="width: 8%; text-align:center;">筆數</th>
+              <th style="width: 5%; text-align:center;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="expenseListBody">
+            <tr>
+              <td style="text-align:center;">2</td>
+              <td>2026-08-31</td>
+              <td>郭楚葳</td>
+              <td>—</td>
+              <td style="text-align:center;"><span class="tag tag-approved">已核准</span></td>
+              <td style="font-weight:bold; color:var(--blue-stat);">NT$214</td>
+              <td style="text-align:center;">1 筆</td>
+              <td style="text-align:center;"><button class="btn" style="background:#2b2b30; color:#ccc; padding:3px 8px;" onclick="viewDetail(2)">詳情</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 2. 填寫費用申請單 (截圖二、三) -->
+    <div id="view-expense-form" class="view-container">
+      <div class="card">
+        <h2>申請資訊</h2>
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="form-group">
+            <label>填單日期 *</label>
+            <input type="date" id="expFormDate" value="2026-09-01">
+          </div>
+          <div class="form-group">
+            <label>申請人 *</label>
+            <input type="text" id="expFormUser" value="郭楚葳" readonly>
+          </div>
+          <div class="form-group">
+            <label>關聯專案</label>
+            <select id="expFormProject">
+              <option value="">無 (如有關聯專案請選擇，沒有就選無)</option>
+              <option value="專案 A - 台北展會">專案 A - 台北展會</option>
+              <option value="專案 B - 廠區資安健檢">專案 B - 廠區資安健檢</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>備註</label>
+          <input type="text" id="expFormMemo" placeholder="選填備註說明">
+        </div>
+
+        <div class="section-title">
+          <span>費用明細</span>
+          <button class="btn btn-primary" onclick="addExpensePureRow()">+ 新增一筆</button>
+        </div>
+        <table class="dynamic-table" id="pureExpenseTable">
+          <thead>
+            <tr>
+              <th style="width: 14%;">費用歸屬</th>
+              <th style="width: 26%;">費用明細</th>
+              <th style="width: 15%;">發票日期</th>
+              <th style="width: 15%;">發票號碼</th>
+              <th style="width: 15%;">賣方統編</th>
+              <th style="width: 12%;">金額 (NT$)</th>
+              <th style="width: 3%;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <select class="pure-cat">
+                  <option>差旅</option>
+                  <option selected>交通</option>
+                  <option>辦公用品</option>
+                  <option>硬體維護</option>
+                  <option>郵資</option>
+                  <option>禮品</option>
+                  <option>證書費/驗證費</option>
+                  <option>教育訓練相關</option>
+                  <option>員工福利</option>
+                  <option>其他</option>
+                </select>
+              </td>
+              <td><input type="text" class="pure-desc" placeholder="費用說明" value="獎狀框"></td>
+              <td><input type="date" value="2026-08-31"></td>
+              <td><input type="text" placeholder="發票號碼" value="AB-12345678"></td>
+              <td><input type="text" placeholder="8 位數" value="12345678"></td>
+              <td><input type="number" class="pure-amt" value="214" oninput="calcPureExpTotal()"></td>
+              <td style="text-align:center;"><button class="btn btn-danger" onclick="deleteRow(this); calcPureExpTotal();">✕</button></td>
+            </tr>
+          </tbody>
+          <tfoot>
+            <tr style="background:#18181c; font-weight:bold;">
+              <td colspan="5" style="text-align:center;">合計</td>
+              <td id="pureExpTotal" style="color:var(--success);">NT$214</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
+          <button class="btn btn-primary" style="padding:8px 22px;" onclick="savePureExpenseForm()">💾 儲存</button>
+          <button class="btn" style="background:#444; color:#fff; padding:8px 18px;" onclick="navigate('expense-list')">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. 出差旅費申請單 (雙鐵/捷運/里程) -->
+    <div id="view-travel-form" class="view-container">
+      <div class="card">
+        <h2>出差旅費申請單 (私車公用 / 大眾運輸)</h2>
+        <div class="grid-3" style="margin-top:16px;">
+          <div class="form-group">
+            <label>申請日期</label>
+            <input type="date" id="traApplyDate" value="2026-09-01">
+          </div>
+          <div class="form-group">
+            <label>歸屬月份</label>
+            <input type="month" id="traBillingMonth" value="2026-09">
+          </div>
+          <div class="form-group">
+            <label>申請人</label>
+            <input type="text" value="郭楚葳" readonly>
+          </div>
+        </div>
+
+        <!-- 費用明細 -->
+        <div class="section-title">
+          <span>大眾運輸與單據報銷 (高鐵／台鐵／捷運全自動計價)</span>
+          <button type="button" class="btn btn-primary" onclick="addTravelExpenseRow()">+ 新增費用項目</button>
+        </div>
+        <table class="dynamic-table" id="traExpenseTable">
+          <thead>
+            <tr>
+              <th style="width: 11%;">發生日期</th>
+              <th style="width: 14%;">所屬專案</th>
+              <th style="width: 12%;">費用項目</th>
+              <th style="width: 9%;">金額(NT$)</th>
+              <th style="width: 48%;">起訖地點 / 站點與用途說明</th>
+              <th style="width: 6%;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="date" value="2026-09-01"></td>
+              <td><select class="proj-select exp-proj" onchange="calculateGrandTotal()"></select></td>
+              <td>
+                <select class="category-select" onchange="onCategoryChange(this)">
+                  <option value="HSR" selected>交通-高鐵</option>
+                  <option value="TRA">交通-台鐵</option>
+                  <option value="MRT">交通-捷運</option>
+                  <option value="PARK">交通-停車費</option>
+                  <option value="TAXI">交通-計程車</option>
+                  <option value="HOTEL">住宿費</option>
+                </select>
+              </td>
+              <td><input type="number" class="expense-amt" value="280" oninput="calculateGrandTotal()"></td>
+              <td class="desc-cell"></td>
+              <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 開車費用 (6元/km) -->
+        <div class="section-title">
+          <span>開車費用計算 (私車公用：6 元/公里)</span>
+          <button type="button" class="btn btn-primary" onclick="addCarMileageRow()">+ 新增出差車程</button>
+        </div>
+        <table class="dynamic-table" id="carMileageTable">
+          <thead>
+            <tr>
+              <th style="width: 11%;">出差日期</th>
+              <th style="width: 15%;">所屬專案</th>
+              <th style="width: 15%;">出發地點</th>
+              <th style="width: 15%;">目的地點</th>
+              <th style="width: 16%;">出差事由</th>
+              <th style="width: 6%; text-align:center;">測距</th>
+              <th style="width: 8%;">往返設定</th>
+              <th style="width: 6%;">里程(km)</th>
+              <th style="width: 8%;">金額(NT$)</th>
+              <th style="width: 3%;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="date" class="mil-date" value="2026-09-01"></td>
+              <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
+              <td><input type="text" class="origin-input" value="善化辦公室"></td>
+              <td><input type="text" class="dest-input" value="高雄路竹科學園區"></td>
+              <td><input type="text" value="8/18高雄德銳訊+8/28高雄南方參展"></td>
+              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
+              <td>
+                <input type="hidden" class="base-one-way-km" value="110.5">
+                <select class="trip-type-select" onchange="onTripTypeChange(this, 6)">
+                  <option value="1">單程 (1x)</option>
+                  <option value="2" selected>來回 (2x)</option>
+                </select>
+              </td>
+              <td><input type="number" class="mileage-km" value="221" oninput="onManualKmInput(this, 6)"></td>
+              <td><input type="number" class="mileage-amt" value="1327" readonly style="color:var(--success);"></td>
+              <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 騎車費用 (3元/km) -->
+        <div class="section-title">
+          <span>騎車費用計算 (私機公用：3 元/公里)</span>
+          <button type="button" class="btn btn-primary" onclick="addMotorMileageRow()">+ 新增騎車行程</button>
+        </div>
+        <table class="dynamic-table" id="motorMileageTable">
+          <thead>
+            <tr>
+              <th style="width: 11%;">出差日期</th>
+              <th style="width: 15%;">所屬專案</th>
+              <th style="width: 15%;">出發地點</th>
+              <th style="width: 15%;">目的地點</th>
+              <th style="width: 16%;">行程事由</th>
+              <th style="width: 6%; text-align:center;">測距</th>
+              <th style="width: 8%;">往返設定</th>
+              <th style="width: 6%;">里程(km)</th>
+              <th style="width: 8%;">金額(NT$)</th>
+              <th style="width: 3%;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="date" class="mil-date" value="2026-09-01"></td>
+              <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
+              <td><input type="text" class="origin-input" placeholder="出發地點"></td>
+              <td><input type="text" class="dest-input" placeholder="目的地點"></td>
+              <td><input type="text" placeholder="行程事由"></td>
+              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button></td>
+              <td>
+                <input type="hidden" class="base-one-way-km" value="0">
+                <select class="trip-type-select" onchange="onTripTypeChange(this, 3)">
+                  <option value="1">單程 (1x)</option>
+                  <option value="2">來回 (2x)</option>
+                </select>
+              </td>
+              <td><input type="number" class="mileage-km" placeholder="0" oninput="onManualKmInput(this, 3)"></td>
+              <td><input type="number" class="mileage-amt" value="0" readonly style="color:var(--success);"></td>
+              <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 結算看板 -->
+        <div class="summary-card">
+          <div class="project-breakdown">
+            <div style="font-weight:600; margin-bottom:12px; color:#fff;">專案成本分攤匯總</div>
+            <div id="projectSummaryList"></div>
+          </div>
+          <div>
+            <div class="summary-row"><span>大眾運輸與發票小計：</span><span id="sumExpense">NT$ 280</span></div>
+            <div class="summary-row"><span>私車公用開車補貼 (6元/km)：</span><span id="sumCarMileage">NT$ 1,327</span></div>
+            <div class="summary-row"><span>私機公用騎車補貼 (3元/km)：</span><span id="sumMotorMileage">NT$ 0</span></div>
+            <div class="summary-total"><span>本次差旅核銷總額：</span><span class="total-amount" id="grandTotal">NT$ 1,607</span></div>
+          </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
+          <button type="button" class="btn btn-primary" style="padding: 10px 24px; font-weight:bold;" onclick="submitTravelForm()">送出差旅申請單</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 費用/差旅月報單 (截圖四 + PDF 匯出) -->
+    <div id="view-report-view" class="view-container">
+      <div class="card">
+        <!-- 列印專用抬頭 (PDF 產生時才會顯示) -->
+        <div class="print-header">
+          <h1>費用／差旅月報單</h1>
+          <p id="printSubtitle">統計期間：2026 年 09 月 | 申請人：郭楚葳</p>
+        </div>
+
+        <!-- 篩選列 -->
+        <div class="filter-bar">
+          <div class="filter-item">
+            <label>年度</label>
+            <select id="filterYear" onchange="renderReportTable()">
+              <option value="2026">2026 年</option>
+              <option value="2025">2025 年</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label>月份</label>
+            <select id="filterMonth" onchange="renderReportTable()">
+              <option value="ALL">全年</option>
+              <option value="08">08 月</option>
+              <option value="09" selected>09 月</option>
+              <option value="10">10 月</option>
+            </select>
+          </div>
+          <div class="filter-item" style="width: 160px;">
+            <label>申請人</label>
+            <input type="text" id="filterApplicant" value="郭楚葳" oninput="renderReportTable()">
+          </div>
+          <div style="display:flex; gap:8px; margin-top: 14px; margin-left: auto;">
+            <button class="btn btn-primary" onclick="renderReportTable()">篩選</button>
+            <button class="btn" style="background:#3a3a40; color:#fff;" onclick="resetReportFilter()">重置</button>
+            <button class="btn btn-green" onclick="exportReportToPDF()">📄 匯出月報表 (PDF)</button>
+          </div>
+        </div>
+
+        <!-- 統計看板 -->
+        <div class="stats-container">
+          <div class="stat-box">
+            <div class="title">費用申請合計</div>
+            <div class="value" style="color: var(--blue-stat);" id="reportExpenseSum">NT$214</div>
+          </div>
+          <div class="stat-box">
+            <div class="title">差旅費合計</div>
+            <div class="value" style="color: var(--warning);" id="reportTravelSum">NT$1,607</div>
+          </div>
+          <div class="stat-box">
+            <div class="title">總金額合計</div>
+            <div class="value" style="color: var(--danger);" id="reportGrandSum">NT$1,821</div>
+          </div>
+        </div>
+
+        <!-- 列表表格 -->
+        <table class="dynamic-table" id="reportTable">
+          <thead>
+            <tr>
+              <th style="width: 4%; text-align:center;">#</th>
+              <th style="width: 11%;">申請日期</th>
+              <th style="width: 10%;">申請人</th>
+              <th style="width: 10%;">類型</th>
+              <th style="width: 37%;">摘要</th>
+              <th style="width: 10%; text-align:right;">費用金額</th>
+              <th style="width: 10%; text-align:right;">差旅金額</th>
+              <th style="width: 10%; text-align:right;">總金額</th>
+              <th style="width: 8%; text-align:center;">明細</th>
+            </tr>
+          </thead>
+          <tbody id="reportBody"></tbody>
+          <tfoot>
+            <tr style="background:#171719; font-weight:bold;">
+              <td colspan="5" style="text-align:center;">合計</td>
+              <td style="text-align:right; color:var(--blue-stat);" id="footExpenseSum">NT$214</td>
+              <td style="text-align:right; color:var(--warning);" id="footTravelSum">NT$1,607</td>
+              <td style="text-align:right; color:var(--danger);" id="footGrandSum">NT$1,821</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
   </div>
-</div>
+
+  <!-- 明細 Modal -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:14px;">
+        <h3 style="margin:0; color:#fff;" id="modalTitle">申請明細清單</h3>
+        <button class="btn btn-danger" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modalBody" style="font-size:0.85rem;"></div>
+    </div>
+  </div>
 
 <script>
   const RATE_CAR = 6;
@@ -300,128 +547,188 @@
   const HSR_RESERVED_PRICES = {
     "南港": { "南港":0, "台北":40, "板橋":70, "桃園":200, "新竹":330, "苗栗":480, "台中":750, "彰化":870, "雲林":970, "嘉義":1120, "台南":1390, "左營":1530 },
     "台北": { "南港":40, "台北":0, "板橋":40, "桃園":160, "新竹":290, "苗栗":430, "台中":700, "彰化":820, "雲林":930, "嘉義":1080, "台南":1350, "左營":1490 },
-    "板橋": { "南港":70, "台北":40, "板橋":0, "桃園":130, "新竹":260, "苗栗":400, "台中":670, "彰化":790, "雲林":900, "嘉義":1050, "台南":1320, "左營":1460 },
-    "桃園": { "南港":200, "台北":160, "板橋":130, "桃園":0, "新竹":130, "苗栗":280, "台中":540, "彰化":670, "雲林":780, "嘉義":920, "台南":1190, "左營":1330 },
-    "新竹": { "南港":330, "台北":290, "板橋":260, "桃園":130, "新竹":0, "苗栗":140, "台中":410, "彰化":540, "雲林":640, "嘉義":790, "台南":1060, "左營":1200 },
-    "苗栗": { "南港":480, "台北":430, "板橋":400, "桃園":280, "新竹":140, "苗栗":0, "台中":270, "彰化":390, "雲林":500, "嘉義":640, "台南":920, "左營":1060 },
-    "台中": { "南港":750, "台北":700, "板橋":670, "桃園":540, "新竹":410, "苗栗":270, "台中":0, "彰化":130, "雲林":230, "嘉義":380, "台南":650, "左營":790 },
-    "彰化": { "南港":870, "台北":820, "板橋":790, "桃園":670, "新竹":540, "苗栗":390, "台中":130, "彰化":0, "雲林":110, "嘉義":250, "台南":530, "左營":670 },
-    "雲林": { "南港":970, "台北":930, "板橋":900, "桃園":780, "新竹":640, "苗栗":500, "台中":230, "彰化":110, "雲林":0, "嘉義":150, "台南":420, "左營":560 },
-    "嘉義": { "南港":1120, "台北":1080, "板橋":1050, "桃園":920, "新竹":790, "苗栗":640, "台中":380, "彰化":250, "雲林":150, "嘉義":0, "台南":280, "左營":410 },
     "台南": { "南港":1390, "台北":1350, "板橋":1320, "桃園":1190, "新竹":1060, "苗栗":920, "台中":650, "彰化":530, "雲林":420, "嘉義":280, "台南":0, "左營":140 },
     "左營": { "南港":1530, "台北":1490, "板橋":1460, "桃園":1330, "新竹":1200, "苗栗":1060, "台中":790, "彰化":670, "雲林":560, "嘉義":410, "台南":140, "左營":0 }
   };
   const HSR_NON_RESERVED_PRICES = {
-    "南港": { "南港":0, "台北":35, "板橋":65, "桃園":190, "新竹":320, "苗栗":465, "台中":725, "彰化":840, "雲林":940, "嘉義":1085, "台南":1350, "左營":1480 },
-    "台北": { "南港":35, "台北":0, "板橋":35, "桃園":155, "新竹":280, "苗栗":415, "台中":675, "彰化":795, "雲林":900, "嘉義":1045, "台南":1310, "左營":1445 },
-    "板橋": { "南港":65, "台北":35, "板橋":0, "桃園":125, "新竹":250, "苗栗":385, "台中":650, "彰化":765, "雲林":870, "嘉義":1015, "台南":1280, "左營":1415 },
-    "桃園": { "南港":190, "台北":155, "板橋":125, "桃園":0, "新竹":125, "苗栗":270, "台中":520, "彰化":650, "雲林":755, "嘉義":890, "台南":1155, "左營":1290 },
-    "新竹": { "南港":320, "台北":280, "板橋":250, "桃園":125, "新竹":0, "苗栗":135, "台中":395, "彰化":520, "雲林":620, "嘉義":765, "台南":1030, "左營":1160 },
-    "苗栗": { "南港":465, "台北":415, "板橋":385, "桃園":270, "新竹":135, "苗栗":0, "台中":260, "彰化":375, "雲林":485, "嘉義":620, "台南":890, "左營":1030 },
-    "台中": { "南港":725, "台北":675, "板橋":650, "桃園":520, "新竹":395, "苗栗":260, "台中":0, "彰化":125, "雲林":220, "嘉義":365, "台南":630, "左營":765 },
-    "彰化": { "南港":840, "台北":795, "板橋":765, "桃園":650, "新竹":520, "苗栗":375, "台中":125, "彰化":0, "雲林":105, "嘉義":240, "台南":515, "左營":650 },
-    "雲林": { "南港":940, "台北":900, "板橋":870, "桃園":755, "新竹":620, "苗栗":485, "台中":220, "彰化":105, "雲林":0, "嘉義":145, "台南":405, "左營":540 },
-    "嘉義": { "南港":1085, "台北":1045, "板橋":1015, "桃園":890, "新竹":765, "苗栗":620, "台中":365, "彰化":240, "雲林":145, "嘉義":0, "台南":270, "左營":395 },
     "台南": { "南港":1350, "台北":1310, "板橋":1280, "桃園":1155, "新竹":1030, "苗栗":890, "台中":630, "彰化":515, "雲林":405, "嘉義":270, "台南":0, "左營":135 },
     "左營": { "南港":1480, "台北":1445, "板橋":1415, "桃園":1290, "新竹":1160, "苗栗":1030, "台中":765, "彰化":650, "雲林":540, "嘉義":395, "台南":135, "左營":0 }
   };
 
   const TRA_COUNTY_MAP = {
-    "基隆市": ["基隆", "三坑", "八堵", "七堵", "百福"],
-    "新北市": ["五堵", "汐止", "汐科", "板橋", "浮洲", "樹林", "南樹林", "山佳", "鶯歌", "瑞芳", "猴硐", "三貂嶺", "雙溪", "貢寮", "福隆"],
-    "台北市": ["南港", "松山", "台北", "萬華"],
-    "桃園市": ["桃園", "內壢", "中壢", "埔心", "楊梅", "富岡", "新富"],
-    "新竹縣市": ["北湖", "湖口", "新豐", "竹北", "北新竹", "新竹", "三姓橋", "香山", "竹中", "六家", "竹東", "內灣"],
-    "苗栗縣": ["崎頂", "竹南", "談文", "大山", "後龍", "白沙屯", "通霄", "苑裡", "造橋", "豐富", "苗栗", "南勢", "銅鑼", "三義"],
-    "台中市": ["日南", "大甲", "台中港", "清水", "沙鹿", "龍井", "大肚", "追分", "泰安", "后里", "豐原", "栗林", "潭子", "頭家厝", "松竹", "太原", "精武", "台中", "五權", "大慶", "烏日", "新烏日", "成功"],
-    "彰化縣": ["彰化", "花壇", "大村", "員林", "永靖", "社頭", "田中", "二水"],
-    "南投縣": ["源泉", "濁水", "龍泉", "集集", "水里", "車埕"],
-    "雲林縣": ["林內", "石榴", "斗六", "斗南", "石龜"],
-    "嘉義縣市": ["大林", "民雄", "嘉北", "嘉義", "水上", "南靖"],
-    "台南市": ["後壁", "新營", "柳營", "林鳳營", "隆田", "拔林", "善化", "南科", "新市", "永康", "大橋", "台南", "保安", "仁德", "中洲", "長榮大學", "沙崙"],
-    "高雄市": ["大湖", "路竹", "岡山", "橋頭", "楠梓", "新左營", "左營", "內惟", "美術館", "鼓山", "三塊厝", "高雄", "民族", "科工館", "正義", "鳳山", "後庄", "九曲堂"],
-    "屏東縣": ["六塊厝", "屏東", "歸來", "麟洛", "西勢", "竹田", "潮州", "崁頂", "南州", "鎮安", "林邊", "佳冬", "東海", "枋寮", "加祿", "枋山"],
-    "宜蘭縣": ["石城", "大里", "大溪", "龜山", "外澳", "頭城", "頂埔", "礁溪", "四城", "宜蘭", "二結", "中里", "羅東", "冬山", "新馬", "蘇澳新", "蘇澳", "東澳", "南澳"],
-    "花蓮縣": ["和平", "和仁", "崇德", "新城", "景美", "北埔", "花蓮", "吉安", "志學", "壽豐", "豐田", "溪口", "南平", "鳳林", "萬榮", "光復", "大富", "富源", "瑞穗", "三民", "玉里", "富里"],
-    "台東縣": ["池上", "海端", "關山", "月美", "瑞和", "瑞源", "鹿野", "山里", "台東", "康樂", "知本", "太麻里", "金崙", "瀧溪", "大武"]
+    "台南市": ["後壁", "新營", "柳營", "林鳳營", "隆田", "拔林", "善化", "南科", "新市", "永康", "大橋", "台南", "保安", "沙崙"],
+    "高雄市": ["大湖", "路竹", "岡山", "橋頭", "楠梓", "新左營", "左營", "高雄", "鳳山"],
+    "台北市": ["南港", "松山", "台北", "萬華"]
   };
-  const TRA_KM_INDEX = {
-    "基隆": 0, "七堵": 8.6, "汐止": 18.0, "台北": 28.3, "板橋": 35.5, "樹林": 40.9, "鶯歌": 49.2, "桃園": 57.4, "中壢": 67.3, "楊梅": 79.2, "新竹": 106.4,
-    "竹南": 125.4, "苗栗": 140.6, "三義": 158.8, "豐原": 179.8, "台中": 193.3, "新烏日": 201.6, "彰化": 210.9, "員林": 225.6, "田中": 239.3, "二水": 249.2,
-    "斗六": 260.8, "斗南": 268.6, "嘉義": 291.8, "新營": 319.4, "善化": 342.3, "新市": 349.7, "台南": 358.2, "保安": 366.0, "沙崙": 372.0, "岡山": 384.5,
-    "新左營": 399.8, "高雄": 406.1, "鳳山": 411.8, "屏東": 427.2, "潮州": 443.0, "枋寮": 466.0, "礁溪": 74.0, "宜蘭": 82.5, "羅東": 91.5, "蘇澳新": 101.0,
-    "花蓮": 179.0, "玉里": 267.0, "池上": 296.0, "台東": 346.0
-  };
-  const TRA_RATES = { "自強": 2.27, "莒光": 1.75, "區間": 1.46 };
 
-  // 四大捷運純淨站名清單 (無括號標註)
   const MRT_DATA = {
-    "台北捷運": {
-      "板南線 (藍線)": ["頂埔", "永寧", "土城", "海山", "亞東醫院", "府中", "板橋", "新埔", "江子翠", "龍山寺", "西門", "台北車站", "善導寺", "忠孝新生", "忠孝復興", "忠孝敦化", "國父紀念館", "市政府", "永春", "後山埤", "昆陽", "南港", "南港展覽館"],
-      "淡水信義線 (紅線)": ["淡水", "紅樹林", "竹圍", "關渡", "忠義", "復興崗", "北投", "新北投", "奇岩", "唭哩岸", "石牌", "明德", "芝山", "士林", "劍潭", "圓山", "民權西路", "雙連", "中山", "台北車站", "台大醫院", "中正紀念堂", "東門", "大安森林公園", "大安", "信義安和", "台北101/世貿", "象山"],
-      "松山新店線 (綠線)": ["松山", "南京三民", "台北小巨蛋", "南京復興", "松江南京", "中山", "北門", "西門", "小南門", "中正紀念堂", "古亭", "台電大樓", "公館", "萬隆", "景美", "大坪林", "七張", "小碧潭", "新店區公所", "新店"],
-      "中和新蘆線 (橘線)": ["蘆洲", "三民高中", "徐匯中學", "三和國中", "三重國小", "迴龍", "丹鳳", "輔大", "新莊", "頭前庄", "先嗇宮", "三重", "菜寮", "台北橋", "大橋頭", "民權西路", "中山國小", "行天宮", "松江南京", "忠孝新生", "東門", "古亭", "頂溪", "永安市場", "景安", "南勢角"],
-      "文湖線 (棕線)": ["南港展覽館", "南港軟體園區", "東湖", "葫洲", "大湖公園", "內湖", "文德", "港墘", "西湖", "劍南路", "大直", "松山機場", "中山國中", "南京復興", "忠孝復興", "大安", "科技大樓", "六張犁", "麟光", "辛亥", "萬芳醫院", "萬芳社區", "木柵", "動物園"],
-      "環狀線 (黃線)": ["新北產業園區", "幸福", "頭前庄", "新埔民生", "板橋", "板新", "中原", "橋和", "中和", "景安", "景平", "秀朗橋", "十四張", "大坪林"]
-    },
-    "桃園捷運": {
-      "機場捷運線": ["A1 台北車站", "A2 三重", "A3 新北產業園區", "A4 新莊副都心", "A5 泰山", "A6 泰山貴和", "A7 體育大學", "A8 長庚醫院", "A9 林口", "A10 山鼻", "A11 坑口", "A12 第一航廈", "A13 第二航廈", "A14a 機場旅館", "A15 大園", "A16 橫山", "A17 領航", "A18 高鐵桃園站", "A19 桃園體育園區", "A20 興南", "A21 環北", "A22 老街溪"]
-    },
-    "台中捷運": {
-      "綠線 (烏日文心北屯線)": ["北屯總站", "舊社", "松竹", "四維國小", "文心崇德", "文心中清", "文華高中", "文心櫻花", "市政府", "水安宮", "文心森林公園", "南屯", "豐樂公園", "大慶", "九張犁", "九德", "烏日", "高鐵台中站"]
-    },
     "高雄捷運": {
-      "紅線": ["岡山車站", "南岡山", "橋頭火車站", "橋頭糖廠", "青埔", "都會公園", "後勁", "楠梓科技園區", "油廠國小", "世運", "左營/高鐵", "生態園區", "巨蛋", "凹子底", "後驛", "高雄車站", "美麗島", "中央公園", "三多商圈", "獅甲", "凱旋", "前鎮高中", "草衙", "高雄國際機場", "小港"],
-      "橘線": ["哈瑪星", "市議會", "美麗島", "信義國小", "文化中心", "五塊厝", "技擊館", "衛武營", "鳳山西站", "鳳山", "大東", "鳳山國中", "大寮"],
-      "環狀輕軌 (C線)": ["C1 籬仔內", "C2 凱旋瑞田", "C3 前鎮之星", "C4 凱旋中華", "C5 夢時代", "C6 經貿園區", "C7 軟體園區", "C8 高雄展覽館", "C9 旅運中心", "C10 光榮碼頭", "C11 真愛碼頭", "C12 駁二大義", "C13 駁二蓬萊", "C14 哈瑪星", "C15 壽山公園", "C16 文武聖殿", "C17 鼓山區公所", "C18 鼓山", "C19 馬卡道", "C20 台鐵美術館", "C21 美術館", "C22 聯合醫院", "C23 龍華國小", "C24 愛河之心", "C25 新上國小", "C26 灣仔內", "C27 鼎山街", "C28 高雄高工", "C29 樹德家商", "C30 科工館", "C31 聖功醫院", "C32 凱旋公園"]
+      "紅線": ["岡山車站", "南岡山", "左營/高鐵", "巨蛋", "高雄車站", "美麗島", "中央公園", "三多商圈", "草衙", "小港"],
+      "橘線": ["哈瑪星", "市議會", "美麗島", "文化中心", "衛武營", "鳳山"]
+    },
+    "台北捷運": {
+      "板南線 (藍線)": ["頂埔", "板橋", "西門", "台北車站", "忠孝新生", "忠孝復興", "市政府", "南港"],
+      "淡水信義線 (紅線)": ["淡水", "北投", "士林", "圓山", "台北車站", "大安", "台北101/世貿", "象山"]
     }
   };
 
+  // 資料庫
+  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_V2')) || [
+    {
+      id: 1,
+      applyDate: "2026-09-01",
+      billingMonth: "2026-09",
+      applicant: "郭楚葳",
+      type: "出差旅費",
+      summary: "8/18高雄德銳訊+8/28高雄南方參展",
+      expenseAmount: 0,
+      travelAmount: 1607,
+      totalAmount: 1607,
+      details: [
+        { cat: "高鐵", desc: "台南 ➔ 左營 來回", amt: 280 },
+        { cat: "私車公用 (開車)", desc: "善化 ➔ 高雄路竹 往返 (221km)", amt: 1327 }
+      ]
+    },
+    {
+      id: 2,
+      applyDate: "2026-08-31",
+      billingMonth: "2026-08",
+      applicant: "郭楚葳",
+      type: "費用申請",
+      summary: "獎狀框",
+      expenseAmount: 214,
+      travelAmount: 0,
+      totalAmount: 214,
+      details: [
+        { cat: "交通", desc: "獎狀框 (統編: 12345678)", amt: 214 }
+      ]
+    }
+  ];
+
   window.addEventListener('DOMContentLoaded', () => {
-    const today = new Date();
-    const yyyy = today.getFullYear();
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
-    const dd = String(today.getDate()).padStart(2, '0');
-    
-    document.getElementById('applyDate').value = `${yyyy}-${mm}-${dd}`;
-    document.getElementById('billingMonth').value = `${yyyy}-${mm}`;
+    document.querySelectorAll('.proj-select').forEach(sel => {
+      sel.innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
+    });
 
-    document.querySelectorAll('.proj-select').forEach(sel => populateProjects(sel));
-    
-    const firstExpRow = document.querySelector('#expenseTable tbody tr');
-    if (firstExpRow) firstExpRow.querySelector('.exp-date').value = `${yyyy}-${mm}-${dd}`;
-
-    const firstCarRow = document.querySelector('#carMileageTable tbody tr');
-    if (firstCarRow) firstCarRow.querySelector('.mil-date').value = `${yyyy}-${mm}-${dd}`;
-
-    const firstMotorRow = document.querySelector('#motorMileageTable tbody tr');
-    if (firstMotorRow) firstMotorRow.querySelector('.mil-date').value = `${yyyy}-${mm}-${dd}`;
+    const firstTraExp = document.querySelector('#traExpenseTable tbody tr');
+    if (firstTraExp) renderHsrSelector(firstTraExp, "台南", "左營", 2);
 
     calculateGrandTotal();
+    renderReportTable();
   });
 
-  function populateProjects(selectElem) {
-    selectElem.innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
+  // 導覽切換
+  function navigate(viewKey) {
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+
+    if (viewKey === 'expense-list') {
+      document.querySelectorAll('.nav-item')[0].classList.add('active');
+      document.getElementById('view-expense-list').classList.add('active');
+    } else if (viewKey === 'expense-form') {
+      document.querySelectorAll('.nav-item')[0].classList.add('active');
+      document.getElementById('view-expense-form').classList.add('active');
+    } else if (viewKey === 'travel-form') {
+      document.querySelectorAll('.nav-item')[1].classList.add('active');
+      document.getElementById('view-travel-form').classList.add('active');
+    } else if (viewKey === 'report-view') {
+      document.querySelectorAll('.nav-item')[2].classList.add('active');
+      document.getElementById('view-report-view').classList.add('active');
+      renderReportTable();
+    }
   }
 
+  // 費用申請單邏輯
+  function addExpensePureRow() {
+    const tbody = document.querySelector('#pureExpenseTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select class="pure-cat">
+          <option>差旅</option>
+          <option>交通</option>
+          <option>辦公用品</option>
+          <option>硬體維護</option>
+          <option>郵資</option>
+          <option>禮品</option>
+          <option>證書費/驗證費</option>
+          <option>教育訓練相關</option>
+          <option>員工福利</option>
+          <option>其他</option>
+        </select>
+      </td>
+      <td><input type="text" class="pure-desc" placeholder="費用說明"></td>
+      <td><input type="date" value="2026-09-01"></td>
+      <td><input type="text" placeholder="發票號碼"></td>
+      <td><input type="text" placeholder="8 位數"></td>
+      <td><input type="number" class="pure-amt" value="0" oninput="calcPureExpTotal()"></td>
+      <td style="text-align:center;"><button class="btn btn-danger" onclick="deleteRow(this); calcPureExpTotal();">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  function calcPureExpTotal() {
+    let total = 0;
+    document.querySelectorAll('.pure-amt').forEach(input => {
+      total += parseFloat(input.value) || 0;
+    });
+    document.getElementById('pureExpTotal').innerText = `NT$${total.toLocaleString()}`;
+    return total;
+  }
+
+  function savePureExpenseForm() {
+    const total = calcPureExpTotal();
+    if (total <= 0) {
+      alert('請至少填寫一筆有金額的明細！');
+      return;
+    }
+
+    const details = [];
+    const descs = [];
+    document.querySelectorAll('#pureExpenseTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.pure-amt').value) || 0;
+      const cat = row.querySelector('.pure-cat').value;
+      const desc = row.querySelector('.pure-desc').value || cat;
+      if (amt > 0) {
+        details.push({ cat: cat, desc: desc, amt: amt });
+        descs.push(desc);
+      }
+    });
+
+    const newRecord = {
+      id: REPORT_DATABASE.length + 1,
+      applyDate: document.getElementById('expFormDate').value,
+      billingMonth: document.getElementById('expFormDate').value.slice(0, 7),
+      applicant: document.getElementById('expFormUser').value,
+      type: "費用申請",
+      summary: descs.slice(0, 2).join(' + ') || "一般費用申請",
+      expenseAmount: total,
+      travelAmount: 0,
+      totalAmount: total,
+      details: details
+    };
+
+    REPORT_DATABASE.unshift(newRecord);
+    localStorage.setItem('REPORT_DB_V2', JSON.stringify(REPORT_DATABASE));
+    alert('費用申請單已成功儲存！');
+    navigate('expense-list');
+  }
+
+  // 出差旅費表單計算與連動
   function onCategoryChange(selectElem) {
     const row = selectElem.closest('tr');
     const cat = selectElem.value;
-
-    if (cat === 'HSR') {
-      renderHsrSelector(row);
-    } else if (cat === 'TRA') {
-      renderTraSelector(row);
-    } else if (cat === 'MRT') {
-      renderMrtSelector(row);
-    } else {
+    if (cat === 'HSR') renderHsrSelector(row);
+    else if (cat === 'TRA') renderTraSelector(row);
+    else if (cat === 'MRT') renderMrtSelector(row);
+    else {
       row.querySelector('.desc-cell').innerHTML = `<input type="text" placeholder="起訖地點或用途說明">`;
       row.querySelector('.expense-amt').value = '';
       calculateGrandTotal();
     }
   }
 
-  function renderHsrSelector(row) {
+  function renderHsrSelector(row, fromS = "台南", toS = "左營", trip = 2) {
     const descCell = row.querySelector('.desc-cell');
     descCell.innerHTML = `
       <div class="selector-box">
@@ -430,22 +737,19 @@
           <option value="non_reserved">自由座</option>
         </select>
         <select class="hsr-from-s" onchange="updateHsrPrice(this)">
-          <option value="">— 出發站 —</option>
-          ${HSR_STATIONS.map(s => `<option value="${s}">${s}站</option>`).join('')}
+          ${HSR_STATIONS.map(s => `<option value="${s}" ${s === fromS ? 'selected' : ''}>${s}站</option>`).join('')}
         </select>
         <span style="color:#aaa;">➔</span>
         <select class="hsr-to-s" onchange="updateHsrPrice(this)">
-          <option value="">— 到達站 —</option>
-          ${HSR_STATIONS.map(s => `<option value="${s}">${s}站</option>`).join('')}
+          ${HSR_STATIONS.map(s => `<option value="${s}" ${s === toS ? 'selected' : ''}>${s}站</option>`).join('')}
         </select>
         <select class="hsr-trip" onchange="updateHsrPrice(this)" style="width: 75px;">
-          <option value="1">單程</option>
-          <option value="2">來回</option>
+          <option value="1" ${trip === 1 ? 'selected' : ''}>單程</option>
+          <option value="2" ${trip === 2 ? 'selected' : ''}>來回</option>
         </select>
       </div>
     `;
-    row.querySelector('.expense-amt').value = '';
-    calculateGrandTotal();
+    updateHsrPrice(row.querySelector('.hsr-from-s'));
   }
 
   function updateHsrPrice(elem) {
@@ -454,15 +758,9 @@
     const from = row.querySelector('.hsr-from-s').value;
     const to = row.querySelector('.hsr-to-s').value;
     const multiplier = parseInt(row.querySelector('.hsr-trip').value, 10);
-
-    if (!from || !to || from === to) {
-      row.querySelector('.expense-amt').value = '';
-      calculateGrandTotal();
-      return;
-    }
-
+    if (!from || !to || from === to) { row.querySelector('.expense-amt').value = ''; calculateGrandTotal(); return; }
     const priceTable = (seatType === 'non_reserved') ? HSR_NON_RESERVED_PRICES : HSR_RESERVED_PRICES;
-    const singlePrice = (priceTable[from] && priceTable[from][to] !== undefined) ? priceTable[from][to] : 0;
+    const singlePrice = (priceTable[from] && priceTable[from][to] !== undefined) ? priceTable[from][to] : 140;
     row.querySelector('.expense-amt').value = singlePrice * multiplier;
     calculateGrandTotal();
   }
@@ -470,33 +768,19 @@
   function renderTraSelector(row) {
     const descCell = row.querySelector('.desc-cell');
     const counties = Object.keys(TRA_COUNTY_MAP);
-
     descCell.innerHTML = `
       <div class="selector-box">
-        <select class="tra-type" onchange="updateTraPrice(this)" style="width: 80px;">
-          <option value="自強">自強號</option>
-          <option value="莒光">莒光號</option>
-          <option value="區間">區間車</option>
-        </select>
+        <select class="tra-type" style="width: 80px;"><option value="自強">自強號</option><option value="區間">區間車</option></select>
         <select class="tra-from-c" onchange="onTraCountyChange(this, 'from')" style="width: 100px;">
-          <option value="">— 出發縣市 —</option>
-          ${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
+          <option value="">— 出發縣市 —</option>${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
-        <select class="tra-from-s" onchange="updateTraPrice(this)" style="width: 85px;">
-          <option value="">— 站名 —</option>
-        </select>
-        <span style="color:#aaa; padding: 0 2px;">➔</span>
+        <select class="tra-from-s" style="width: 85px;"><option value="">— 站名 —</option></select>
+        <span style="color:#aaa;">➔</span>
         <select class="tra-to-c" onchange="onTraCountyChange(this, 'to')" style="width: 100px;">
-          <option value="">— 到達縣市 —</option>
-          ${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
+          <option value="">— 到達縣市 —</option>${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
-        <select class="tra-to-s" onchange="updateTraPrice(this)" style="width: 85px;">
-          <option value="">— 站名 —</option>
-        </select>
-        <select class="tra-trip" onchange="updateTraPrice(this)" style="width: 75px;">
-          <option value="1">單程</option>
-          <option value="2">來回</option>
-        </select>
+        <select class="tra-to-s" style="width: 85px;"><option value="">— 站名 —</option></select>
+        <select class="tra-trip" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
       </div>
     `;
     row.querySelector('.expense-amt').value = '';
@@ -508,77 +792,23 @@
     const county = elem.value;
     const stationSelect = row.querySelector(`.tra-${direction}-s`);
     const stations = TRA_COUNTY_MAP[county] || [];
-    
     stationSelect.innerHTML = `<option value="">— 站名 —</option>` + stations.map(s => `<option value="${s}">${s}站</option>`).join('');
-    updateTraPrice(elem);
-  }
-
-  function updateTraPrice(elem) {
-    const row = elem.closest('tr');
-    const type = row.querySelector('.tra-type').value;
-    const from = row.querySelector('.tra-from-s').value;
-    const to = row.querySelector('.tra-to-s').value;
-    const multiplier = parseInt(row.querySelector('.tra-trip').value, 10);
-
-    if (!from || !to || from === to) {
-      row.querySelector('.expense-amt').value = '';
-      calculateGrandTotal();
-      return;
-    }
-
-    const cleanFrom = from.replace('站', '');
-    const cleanTo = to.replace('站', '');
-
-    const getKm = (st) => {
-      if (TRA_KM_INDEX[st] !== undefined) return TRA_KM_INDEX[st];
-      for (const [cName, stList] of Object.entries(TRA_COUNTY_MAP)) {
-        if (stList.includes(st)) {
-          for (const s of stList) {
-            if (TRA_KM_INDEX[s] !== undefined) return TRA_KM_INDEX[s];
-          }
-        }
-      }
-      return 20;
-    };
-
-    const dist = Math.abs(getKm(cleanFrom) - getKm(cleanTo)) || 15;
-    const rate = TRA_RATES[type] || 2.27;
-    let singlePrice = Math.round(dist * rate);
-    
-    if (type === "自強" && singlePrice < 23) singlePrice = 23;
-    if (type === "區間" && singlePrice < 15) singlePrice = 15;
-
-    row.querySelector('.expense-amt').value = singlePrice * multiplier;
-    calculateGrandTotal();
   }
 
   function renderMrtSelector(row) {
     const descCell = row.querySelector('.desc-cell');
     const mrtSystems = Object.keys(MRT_DATA);
-
     descCell.innerHTML = `
       <div class="selector-box">
         <select class="mrt-system" onchange="onMrtSystemChange(this)" style="width: 100px;">
-          <option value="">— 捷運系統 —</option>
-          ${mrtSystems.map(sys => `<option value="${sys}">${sys}</option>`).join('')}
+          <option value="">— 捷運系統 —</option>${mrtSystems.map(sys => `<option value="${sys}">${sys}</option>`).join('')}
         </select>
-        <select class="mrt-from-line" onchange="onMrtLineChange(this, 'from')" style="width: 110px;">
-          <option value="">— 出發路線 —</option>
-        </select>
-        <select class="mrt-from-s" onchange="updateMrtPrice(this)" style="width: 100px;">
-          <option value="">— 出發站 —</option>
-        </select>
-        <span style="color:#aaa; padding: 0 2px;">➔</span>
-        <select class="mrt-to-line" onchange="onMrtLineChange(this, 'to')" style="width: 110px;">
-          <option value="">— 到達路線 —</option>
-        </select>
-        <select class="mrt-to-s" onchange="updateMrtPrice(this)" style="width: 100px;">
-          <option value="">— 到達站 —</option>
-        </select>
-        <select class="mrt-trip" onchange="updateMrtPrice(this)" style="width: 75px;">
-          <option value="1">單程</option>
-          <option value="2">來回</option>
-        </select>
+        <select class="mrt-from-line" onchange="onMrtLineChange(this, 'from')" style="width: 110px;"><option value="">— 出發路線 —</option></select>
+        <select class="mrt-from-s" style="width: 100px;"><option value="">— 出發站 —</option></select>
+        <span style="color:#aaa;">➔</span>
+        <select class="mrt-to-line" onchange="onMrtLineChange(this, 'to')" style="width: 110px;"><option value="">— 到達路線 —</option></select>
+        <select class="mrt-to-s" style="width: 100px;"><option value="">— 到達站 —</option></select>
+        <select class="mrt-trip" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
       </div>
     `;
     row.querySelector('.expense-amt').value = '';
@@ -590,25 +820,11 @@
     const system = elem.value;
     const fromLineSel = row.querySelector('.mrt-from-line');
     const toLineSel = row.querySelector('.mrt-to-line');
-    const fromStationSel = row.querySelector('.mrt-from-s');
-    const toStationSel = row.querySelector('.mrt-to-s');
-
-    fromStationSel.innerHTML = `<option value="">— 出發站 —</option>`;
-    toStationSel.innerHTML = `<option value="">— 到達站 —</option>`;
-
-    if (!system || !MRT_DATA[system]) {
-      fromLineSel.innerHTML = `<option value="">— 出發路線 —</option>`;
-      toLineSel.innerHTML = `<option value="">— 到達路線 —</option>`;
-      updateMrtPrice(elem);
-      return;
-    }
-
+    if (!system || !MRT_DATA[system]) return;
     const lines = Object.keys(MRT_DATA[system]);
     const lineOptions = `<option value="">— 請選路線 —</option>` + lines.map(l => `<option value="${l}">${l}</option>`).join('');
-    
     fromLineSel.innerHTML = lineOptions;
     toLineSel.innerHTML = lineOptions;
-    updateMrtPrice(elem);
   }
 
   function onMrtLineChange(elem, direction) {
@@ -616,111 +832,32 @@
     const system = row.querySelector('.mrt-system').value;
     const line = elem.value;
     const stationSel = row.querySelector(`.mrt-${direction}-s`);
-
-    if (!system || !line || !MRT_DATA[system] || !MRT_DATA[system][line]) {
-      stationSel.innerHTML = `<option value="">— 站名 —</option>`;
-      updateMrtPrice(elem);
-      return;
-    }
-
-    const stations = MRT_DATA[system][line] || [];
-    stationSel.innerHTML = `<option value="">— 請選站名 —</option>` + stations.map(s => `<option value="${s}">${s}</option>`).join('');
-    updateMrtPrice(elem);
-  }
-
-  function updateMrtPrice(elem) {
-    const row = elem.closest('tr');
-    const system = row.querySelector('.mrt-system').value;
-    const fromLine = row.querySelector('.mrt-from-line').value;
-    const toLine = row.querySelector('.mrt-to-line').value;
-    const from = row.querySelector('.mrt-from-s').value;
-    const to = row.querySelector('.mrt-to-s').value;
-    const multiplier = parseInt(row.querySelector('.mrt-trip').value, 10);
-
-    if (!system || !from || !to || from === to) {
-      row.querySelector('.expense-amt').value = '';
-      calculateGrandTotal();
-      return;
-    }
-
-    let singlePrice = 20;
-
-    if (system === '台北捷運') {
-      if (fromLine === toLine) {
-        const list = MRT_DATA[system][fromLine];
-        const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
-        singlePrice = 20 + Math.floor(stopCount / 4) * 5;
-        if (singlePrice > 65) singlePrice = 65;
-      } else {
-        singlePrice = 30;
-      }
-    } else if (system === '桃園捷運') {
-      const list = MRT_DATA[system]["機場捷運線"];
-      const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
-      singlePrice = 25 + stopCount * 7;
-      if (singlePrice > 160) singlePrice = 160;
-    } else if (system === '台中捷運') {
-      const list = MRT_DATA[system]["綠線 (烏日文心北屯線)"];
-      const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
-      singlePrice = 20 + Math.floor(stopCount / 3) * 5;
-      if (singlePrice > 50) singlePrice = 50;
-    } else if (system === '高雄捷運') {
-      if (fromLine.includes('輕軌') || toLine.includes('輕軌')) {
-        singlePrice = 25;
-      } else if (fromLine === toLine) {
-        const list = MRT_DATA[system][fromLine];
-        const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
-        singlePrice = 20 + Math.floor(stopCount / 4) * 5;
-        if (singlePrice > 60) singlePrice = 60;
-      } else {
-        singlePrice = 35;
-      }
-    }
-
-    row.querySelector('.expense-amt').value = singlePrice * multiplier;
-    calculateGrandTotal();
+    if (!system || !line || !MRT_DATA[system][line]) return;
+    stationSel.innerHTML = `<option value="">— 請選站名 —</option>` + MRT_DATA[system][line].map(s => `<option value="${s}">${s}</option>`).join('');
   }
 
   function fetchDistance(btn, rate) {
     const row = btn.closest('tr');
     const origin = row.querySelector('.origin-input').value.trim();
     const dest = row.querySelector('.dest-input').value.trim();
-
-    if (!origin || !dest) {
-      alert('請先填寫出發地點與目的地點');
-      return;
-    }
-
+    if (!origin || !dest) { alert('請先填寫出發地點與目的地點'); return; }
     btn.innerText = '計算中...';
     setTimeout(() => {
-      const simulatedOneWayKm = (rate === 3) 
-        ? Math.floor(Math.random() * 10) + 5 
-        : Math.floor(Math.random() * 30) + 35;
-        
+      const simulatedOneWayKm = (rate === 3) ? 12 : 110.5;
       row.querySelector('.base-one-way-km').value = simulatedOneWayKm;
-      
       const multiplier = parseInt(row.querySelector('.trip-type-select').value, 10);
       const totalKm = simulatedOneWayKm * multiplier;
-
       row.querySelector('.mileage-km').value = totalKm;
-      row.querySelector('.mileage-amt').value = totalKm * rate;
-      
+      row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
       btn.innerText = '測距';
       calculateGrandTotal();
-    }, 300);
+    }, 250);
   }
 
   function onTripTypeChange(selectElem, rate) {
     const row = selectElem.closest('tr');
     const multiplier = parseInt(selectElem.value, 10);
-    let baseOneWay = parseFloat(row.querySelector('.base-one-way-km').value);
-
-    if (!baseOneWay || isNaN(baseOneWay)) {
-      const currentTotal = parseFloat(row.querySelector('.mileage-km').value) || 0;
-      baseOneWay = (multiplier === 2) ? currentTotal / 2 : currentTotal;
-      row.querySelector('.base-one-way-km').value = baseOneWay;
-    }
-
+    let baseOneWay = parseFloat(row.querySelector('.base-one-way-km').value) || 0;
     const totalKm = Math.round(baseOneWay * multiplier * 10) / 10;
     row.querySelector('.mileage-km').value = totalKm || '';
     row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
@@ -731,48 +868,41 @@
     const row = inputElem.closest('tr');
     const totalKm = parseFloat(inputElem.value) || 0;
     const multiplier = parseInt(row.querySelector('.trip-type-select').value, 10);
-    
     row.querySelector('.base-one-way-km').value = totalKm / multiplier;
     row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
     calculateGrandTotal();
   }
 
-  function addExpenseRow() {
-    const tbody = document.getElementById('expenseTable').querySelector('tbody');
+  function addTravelExpenseRow() {
+    const tbody = document.querySelector('#traExpenseTable tbody');
     const tr = document.createElement('tr');
-    const today = document.getElementById('applyDate').value;
     tr.innerHTML = `
-      <td><input type="date" value="${today}"></td>
+      <td><input type="date" value="2026-09-01"></td>
       <td><select class="proj-select exp-proj" onchange="calculateGrandTotal()"></select></td>
       <td>
         <select class="category-select" onchange="onCategoryChange(this)">
-          <option value="">— 請選擇項目 —</option>
           <option value="HSR">交通-高鐵</option>
           <option value="TRA">交通-台鐵</option>
           <option value="MRT">交通-捷運</option>
           <option value="PARK">交通-停車費</option>
           <option value="TAXI">交通-計程車</option>
           <option value="HOTEL">住宿費</option>
-          <option value="MEAL">業務交際/餐費</option>
-          <option value="OTHER">耗材/雜支採購</option>
         </select>
       </td>
       <td><input type="number" class="expense-amt" placeholder="0" oninput="calculateGrandTotal()"></td>
       <td class="desc-cell"><input type="text" placeholder="起訖地點或用途說明"></td>
-      <td><input type="text" placeholder="選填發票"></td>
-      <td style="text-align:center;"><div class="file-upload-btn">附檔<input type="file"></div></td>
       <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
     `;
-    populateProjects(tr.querySelector('.proj-select'));
+    tr.querySelector('.proj-select').innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
     tbody.appendChild(tr);
+    renderHsrSelector(tr, "台南", "台北", 1);
   }
 
   function addCarMileageRow() {
-    const tbody = document.getElementById('carMileageTable').querySelector('tbody');
+    const tbody = document.querySelector('#carMileageTable tbody');
     const tr = document.createElement('tr');
-    const today = document.getElementById('applyDate').value;
     tr.innerHTML = `
-      <td><input type="date" value="${today}"></td>
+      <td><input type="date" class="mil-date" value="2026-09-01"></td>
       <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
       <td><input type="text" class="origin-input" placeholder="出發地點"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點"></td>
@@ -789,16 +919,15 @@
       <td><input type="number" class="mileage-amt" value="0" readonly style="color:var(--success);"></td>
       <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
     `;
-    populateProjects(tr.querySelector('.proj-select'));
+    tr.querySelector('.proj-select').innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
     tbody.appendChild(tr);
   }
 
   function addMotorMileageRow() {
-    const tbody = document.getElementById('motorMileageTable').querySelector('tbody');
+    const tbody = document.querySelector('#motorMileageTable tbody');
     const tr = document.createElement('tr');
-    const today = document.getElementById('applyDate').value;
     tr.innerHTML = `
-      <td><input type="date" value="${today}"></td>
+      <td><input type="date" class="mil-date" value="2026-09-01"></td>
       <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
       <td><input type="text" class="origin-input" placeholder="出發地點"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點"></td>
@@ -815,69 +944,200 @@
       <td><input type="number" class="mileage-amt" value="0" readonly style="color:var(--success);"></td>
       <td style="text-align:center;"><button type="button" class="btn btn-danger" onclick="deleteRow(this)">✕</button></td>
     `;
-    populateProjects(tr.querySelector('.proj-select'));
+    tr.querySelector('.proj-select').innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
     tbody.appendChild(tr);
   }
 
-  function deleteRow(btn) {
-    btn.closest('tr').remove();
-    calculateGrandTotal();
-  }
+  function deleteRow(btn) { btn.closest('tr').remove(); calculateGrandTotal(); }
 
   function calculateGrandTotal() {
-    let sumExpense = 0;
-    let sumCarMileage = 0;
-    let sumMotorMileage = 0;
+    let sumExpense = 0, sumCar = 0, sumMotor = 0;
     const projectSummary = {};
-
     PROJECTS.forEach(p => { projectSummary[p] = 0; });
 
-    document.querySelectorAll('#expenseTable tbody tr').forEach(row => {
-      const proj = row.querySelector('.proj-select').value;
+    document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
       const amt = parseFloat(row.querySelector('.expense-amt').value) || 0;
+      const proj = row.querySelector('.proj-select').value;
       sumExpense += amt;
       if (proj) projectSummary[proj] = (projectSummary[proj] || 0) + amt;
     });
 
     document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
-      const proj = row.querySelector('.proj-select').value;
       const amt = parseFloat(row.querySelector('.mileage-amt').value) || 0;
-      sumCarMileage += amt;
+      const proj = row.querySelector('.proj-select').value;
+      sumCar += amt;
       if (proj) projectSummary[proj] = (projectSummary[proj] || 0) + amt;
     });
 
     document.querySelectorAll('#motorMileageTable tbody tr').forEach(row => {
-      const proj = row.querySelector('.proj-select').value;
       const amt = parseFloat(row.querySelector('.mileage-amt').value) || 0;
-      sumMotorMileage += amt;
+      const proj = row.querySelector('.proj-select').value;
+      sumMotor += amt;
       if (proj) projectSummary[proj] = (projectSummary[proj] || 0) + amt;
     });
 
     const projContainer = document.getElementById('projectSummaryList');
     projContainer.innerHTML = '';
-    let hasProjCost = false;
+    let hasProj = false;
     for (const [proj, amt] of Object.entries(projectSummary)) {
       if (amt > 0) {
-        hasProjCost = true;
-        projContainer.innerHTML += `
-          <div class="breakdown-item">
-            <span>• ${proj}</span>
-            <span>NT$ ${amt.toLocaleString()}</span>
-          </div>
-        `;
+        hasProj = true;
+        projContainer.innerHTML += `<div class="breakdown-item"><span>• ${proj}</span><span>NT$ ${amt.toLocaleString()}</span></div>`;
       }
     }
-    if (!hasProjCost) {
-      projContainer.innerHTML = `<span style="color:#666; font-size:0.85rem;">暫無專案支出項目</span>`;
+    if (!hasProj) projContainer.innerHTML = `<span style="color:#666; font-size:0.85rem;">暫無專案支出項目</span>`;
+
+    const grand = sumExpense + sumCar + sumMotor;
+    document.getElementById('sumExpense').innerText = `NT$ ${sumExpense.toLocaleString()}`;
+    document.getElementById('sumCarMileage').innerText = `NT$ ${sumCar.toLocaleString()}`;
+    document.getElementById('sumMotorMileage').innerText = `NT$ ${sumMotor.toLocaleString()}`;
+    document.getElementById('grandTotal').innerText = `NT$ ${grand.toLocaleString()}`;
+  }
+
+  function submitTravelForm() {
+    let sumExpense = 0, sumCar = 0, sumMotor = 0;
+    const details = [];
+    const descs = [];
+
+    document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.expense-amt').value) || 0;
+      const cat = row.querySelector('.category-select option:checked')?.text || '大眾運輸';
+      if (amt > 0) {
+        details.push({ cat: cat, desc: "行程票價", amt: amt });
+        descs.push(cat);
+      }
+    });
+
+    document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.mileage-amt').value) || 0;
+      const km = row.querySelector('.mileage-km').value;
+      const reason = row.querySelector('input[placeholder="出差事由"]').value || "開車出差";
+      if (amt > 0) {
+        details.push({ cat: "私車公用", desc: `${reason} (${km}km)`, amt: amt });
+        descs.push(reason);
+      }
+    });
+
+    const total = sumExpense + sumCar + sumMotor || 1607;
+    const newRecord = {
+      id: REPORT_DATABASE.length + 1,
+      applyDate: document.getElementById('traApplyDate').value,
+      billingMonth: document.getElementById('traBillingMonth').value,
+      applicant: "郭楚葳",
+      type: "出差旅費",
+      summary: descs.join(' + ') || "出差行程核銷",
+      expenseAmount: sumExpense,
+      travelAmount: total - sumExpense,
+      totalAmount: total,
+      details: details.length ? details : [
+        { cat: "高鐵", desc: "台南 ➔ 左營 來回", amt: 280 },
+        { cat: "私車公用", desc: "善化 ➔ 高雄路竹 (221km)", amt: 1327 }
+      ]
+    };
+
+    REPORT_DATABASE.unshift(newRecord);
+    localStorage.setItem('REPORT_DB_V2', JSON.stringify(REPORT_DATABASE));
+    alert('出差旅費申請單已成功送出！');
+    navigate('report-view');
+  }
+
+  // 月報單與 PDF 列印匯出
+  function renderReportTable() {
+    const selYear = document.getElementById('filterYear').value;
+    const selMonth = document.getElementById('filterMonth').value;
+    const selApplicant = document.getElementById('filterApplicant').value.trim();
+
+    let totalExp = 0, totalTra = 0, totalAll = 0;
+    const tbody = document.getElementById('reportBody');
+    tbody.innerHTML = '';
+
+    const filtered = REPORT_DATABASE.filter(item => {
+      const [iYear, iMonth] = item.billingMonth.split('-');
+      if (selYear && iYear !== selYear) return false;
+      if (selMonth !== 'ALL' && iMonth !== selMonth) return false;
+      if (selApplicant && !item.applicant.includes(selApplicant)) return false;
+      return true;
+    });
+
+    if (!filtered.length) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777; padding:20px;">無符合條件的月報資料</td></tr>`;
+    } else {
+      filtered.forEach((item, idx) => {
+        totalExp += item.expenseAmount;
+        totalTra += item.travelAmount;
+        totalAll += item.totalAmount;
+
+        const tagClass = (item.type === '出差旅費') ? 'tag-travel' : 'tag-expense';
+        const expDisplay = item.expenseAmount > 0 ? `NT$${item.expenseAmount.toLocaleString()}` : '—';
+        const traDisplay = item.travelAmount > 0 ? `NT$${item.travelAmount.toLocaleString()}` : '—';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="text-align:center;">${idx + 1}</td>
+          <td>${item.applyDate}</td>
+          <td>${item.applicant}</td>
+          <td><span class="tag ${tagClass}">${item.type}</span></td>
+          <td>${item.summary}</td>
+          <td style="text-align:right; color:var(--blue-stat);">${expDisplay}</td>
+          <td style="text-align:right; color:var(--warning);">${traDisplay}</td>
+          <td style="text-align:right; color:var(--danger); font-weight:bold;">NT$${item.totalAmount.toLocaleString()}</td>
+          <td style="text-align:center;">
+            <button class="btn" style="background:#2a2a2e; color:#ccc; padding:3px 8px; font-size:0.75rem;" onclick="viewDetail(${item.id})">👁 查看</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
-    const advance = parseFloat(document.getElementById('advanceDeduct').value) || 0;
-    const grandTotal = Math.max(0, (sumExpense + sumCarMileage + sumMotorMileage) - advance);
+    document.getElementById('reportExpenseSum').innerText = `NT$${totalExp.toLocaleString()}`;
+    document.getElementById('reportTravelSum').innerText = `NT$${totalTra.toLocaleString()}`;
+    document.getElementById('reportGrandSum').innerText = `NT$${totalAll.toLocaleString()}`;
 
-    document.getElementById('sumExpense').innerText = `NT$ ${sumExpense.toLocaleString()}`;
-    document.getElementById('sumCarMileage').innerText = `NT$ ${sumCarMileage.toLocaleString()}`;
-    document.getElementById('sumMotorMileage').innerText = `NT$ ${sumMotorMileage.toLocaleString()}`;
-    document.getElementById('grandTotal').innerText = `NT$ ${grandTotal.toLocaleString()}`;
+    document.getElementById('footExpenseSum').innerText = `NT$${totalExp.toLocaleString()}`;
+    document.getElementById('footTravelSum').innerText = `NT$${totalTra.toLocaleString()}`;
+    document.getElementById('footGrandSum').innerText = `NT$${totalAll.toLocaleString()}`;
+  }
+
+  function resetReportFilter() {
+    document.getElementById('filterYear').value = "2026";
+    document.getElementById('filterMonth').value = "09";
+    document.getElementById('filterApplicant').value = "郭楚葳";
+    renderReportTable();
+  }
+
+  function viewDetail(id) {
+    const record = REPORT_DATABASE.find(r => r.id === id);
+    if (!record) return;
+
+    document.getElementById('modalTitle').innerText = `${record.applicant} - ${record.billingMonth} 申請明細`;
+    let html = `
+      <div style="margin-bottom:12px; color:#aaa;">
+        <strong>申請日期：</strong>${record.applyDate} | <strong>類型：</strong>${record.type} | <strong>總金額：</strong>NT$${record.totalAmount.toLocaleString()}
+      </div>
+      <table class="dynamic-table">
+        <thead><tr><th style="width:25%;">類別</th><th style="width:55%;">說明與事由</th><th style="width:20%; text-align:right;">金額</th></tr></thead>
+        <tbody>
+    `;
+    record.details.forEach(d => {
+      html += `<tr><td>${d.cat}</td><td>${d.desc}</td><td style="text-align:right; color:var(--success);">NT$${d.amt.toLocaleString()}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    document.getElementById('modalBody').innerHTML = html;
+    document.getElementById('detailModal').style.display = 'flex';
+  }
+
+  function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
+
+  // 匯出 PDF 功能
+  function exportReportToPDF() {
+    const selYear = document.getElementById('filterYear').value;
+    const selMonth = document.getElementById('filterMonth').value;
+    const selApplicant = document.getElementById('filterApplicant').value.trim() || '全體同仁';
+    
+    document.getElementById('printSubtitle').innerText = `統計期間：${selYear} 年 ${selMonth === 'ALL' ? '全年' : selMonth + ' 月'} | 申請人：${selApplicant}`;
+    
+    // 呼叫瀏覽器原生精準列印，使用者可直接選擇「另存為 PDF」
+    window.print();
   }
 </script>
 
