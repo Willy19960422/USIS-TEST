@@ -495,8 +495,8 @@
             <tr>
               <td><input type="date" class="mil-date"></td>
               <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
-              <td><input type="text" class="origin-input" placeholder="出發地點"></td>
-              <td><input type="text" class="dest-input" placeholder="目的地點"></td>
+              <td><input type="text" class="origin-input" placeholder="出發地點 (如: 台中高鐵站)"></td>
+              <td><input type="text" class="dest-input" placeholder="目的地點 (如: 台北高鐵站)"></td>
               <td><input type="text" class="reason-input" placeholder="出差事由"></td>
               <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
               <td>
@@ -711,10 +711,16 @@
   </div>
 
 <script>
+  // =========================================================================
+  // ★ 重要：請在此處貼上你在 Google Apps Script 部署後取得的 Web App URL
+  // =========================================================================
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwR7hUAHgKTtQd1AlbLyOUMR2HJDhr5K_uIQU60pGtpesJWSxX-ARXIf5FXNJNQaA/exec";
+
   const RATE_CAR = 6;
   const RATE_MOTOR = 3;
   const PROJECTS = ["專案 A - 台北展會", "專案 B - 廠區資安健檢", "公司內部營運", "業務推廣拓展"];
 
+  // 高鐵票價對照表
   const HSR_STATIONS = ["南港", "台北", "板橋", "桃園", "新竹", "苗栗", "台中", "彰化", "雲林", "嘉義", "台南", "左營"];
   const HSR_RESERVED_PRICES = {
     "南港": { "南港":0, "台北":40, "板橋":70, "桃園":200, "新竹":330, "苗栗":480, "台中":750, "彰化":870, "雲林":970, "嘉義":1120, "台南":1390, "左營":1530 },
@@ -745,6 +751,7 @@
     "左營": { "南港":1480, "台北":1445, "板橋":1415, "桃園":1290, "新竹":1160, "苗栗":1030, "台中":765, "彰化":650, "雲林":540, "嘉義":395, "台南":135, "左營":0 }
   };
 
+  // 全台台鐵各縣市車站
   const TRA_COUNTY_MAP = {
     "基隆市": ["基隆", "三坑", "八堵", "七堵", "百福"],
     "新北市": ["五堵", "汐止", "汐科", "板橋", "浮洲", "樹林", "南樹林", "山佳", "鶯歌", "瑞芳", "猴硐", "三貂嶺", "雙溪", "貢寮", "福隆"],
@@ -1294,22 +1301,54 @@
     calculateGrandTotal();
   }
 
-  function fetchDistance(btn, rate) {
+  // =========================================================================
+  // ★ Google Maps 測距服務 (透過 Google Apps Script 執行)
+  // =========================================================================
+  async function fetchDistance(btn, rate) {
     const row = btn.closest('tr');
     const origin = row.querySelector('.origin-input').value.trim();
     const dest = row.querySelector('.dest-input').value.trim();
-    if (!origin || !dest) { alert('請先填寫出發地點與目的地點'); return; }
-    btn.innerText = '計算中...';
-    setTimeout(() => {
-      const simulatedOneWayKm = (rate === 3) ? 10 : 35;
-      row.querySelector('.base-one-way-km').value = simulatedOneWayKm;
-      const multiplier = parseInt(row.querySelector('.trip-type-select').value, 10);
-      const totalKm = simulatedOneWayKm * multiplier;
-      row.querySelector('.mileage-km').value = totalKm;
-      row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
+
+    if (!origin || !dest) {
+      alert('請先填寫出發地點與目的地點 (如: 台中高鐵站, 台北高鐵站)');
+      return;
+    }
+
+    if (!GAS_API_URL || GAS_API_URL.includes("請在此處貼上")) {
+      alert('請先在程式碼中的 GAS_API_URL 變數填入您在 Apps Script 取得的部署網址！');
+      return;
+    }
+
+    btn.innerText = 'Google 測距中...';
+    btn.disabled = true;
+
+    try {
+      const response = await fetch(GAS_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ origin: origin, destination: dest })
+      });
+      const result = await response.json();
+
+      if (result.success && result.distanceKm) {
+        const realOneWayKm = result.distanceKm;
+        row.querySelector('.base-one-way-km').value = realOneWayKm;
+        
+        const multiplier = parseInt(row.querySelector('.trip-type-select').value, 10);
+        const totalKm = Math.round(realOneWayKm * multiplier * 10) / 10;
+
+        row.querySelector('.mileage-km').value = totalKm;
+        row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
+        calculateGrandTotal();
+      } else {
+        alert(`Google Maps 測距提示：${result.error || '查無路徑'}，請確認地名或手動填寫。`);
+      }
+    } catch (err) {
+      alert('無法連線至 Google Apps Script 測距服務，請確認網址與權限是否設定為「所有人 (Anyone)」。');
+    } finally {
       btn.innerText = '測距';
-      calculateGrandTotal();
-    }, 250);
+      btn.disabled = false;
+    }
   }
 
   function onTripTypeChange(selectElem, rate) {
@@ -1361,8 +1400,8 @@
     tr.innerHTML = `
       <td><input type="date" class="mil-date" value="${today}"></td>
       <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
-      <td><input type="text" class="origin-input" placeholder="出發地點"></td>
-      <td><input type="text" class="dest-input" placeholder="目的地點"></td>
+      <td><input type="text" class="origin-input" placeholder="出發地點 (如: 台中高鐵站)"></td>
+      <td><input type="text" class="dest-input" placeholder="目的地點 (如: 台北高鐵站)"></td>
       <td><input type="text" class="reason-input" placeholder="出差事由"></td>
       <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
       <td>
