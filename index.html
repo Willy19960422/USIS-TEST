@@ -70,7 +70,6 @@
       width: 100%;
     }
     input:focus, select:focus, textarea:focus { border-color: var(--accent-hover); }
-    input[readonly] { background-color: #1a1a1d; color: #888; cursor: not-allowed; }
 
     .btn { cursor: pointer; padding: 6px 14px; border-radius: 4px; border: none; font-size: 0.85rem; transition: 0.2s; font-weight: 500; display: inline-flex; align-items: center; }
     .btn-primary { background-color: var(--accent); color: white; }
@@ -162,6 +161,12 @@
     <div class="nav-item" onclick="navigate('report-view')">
       費用/差旅月報單
     </div>
+
+    <!-- 底部登入同仁設定 -->
+    <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border-color);">
+      <div style="font-size:0.75rem; color:#777; margin-bottom:4px;">當前登入者</div>
+      <input type="text" id="globalUser" placeholder="請輸入姓名" oninput="syncUser(this.value)">
+    </div>
   </div>
 
   <!-- 主視圖區 -->
@@ -203,7 +208,7 @@
           </div>
           <div class="form-group">
             <label>申請人 *</label>
-            <input type="text" id="expFormUser" value="郭楚葳">
+            <input type="text" id="expFormUser" placeholder="請輸入申請人姓名">
           </div>
           <div class="form-group">
             <label>關聯專案</label>
@@ -310,7 +315,7 @@
           </div>
           <div class="form-group">
             <label>申請人</label>
-            <input type="text" id="traFormUser" value="郭楚葳">
+            <input type="text" id="traFormUser" placeholder="請輸入申請人姓名">
           </div>
         </div>
 
@@ -458,7 +463,7 @@
       <div class="card">
         <div class="print-header">
           <h1>費用／差旅月報單</h1>
-          <p id="printSubtitle">統計期間：2026 年 09 月 | 申請人：郭楚葳</p>
+          <p id="printSubtitle">統計期間：2026 年 09 月 | 申請人：全體同仁</p>
         </div>
 
         <div class="filter-bar">
@@ -481,7 +486,7 @@
           </div>
           <div class="filter-item" style="width: 160px;">
             <label>申請人</label>
-            <input type="text" id="filterApplicant" value="" placeholder="全部同仁" oninput="renderReportTable()">
+            <input type="text" id="filterApplicant" placeholder="全部同仁" oninput="renderReportTable()">
           </div>
           <div style="display:flex; gap:8px; margin-top: 14px; margin-left: auto;">
             <button class="btn btn-primary" onclick="renderReportTable()">篩選</button>
@@ -637,7 +642,7 @@
     }
   };
 
-  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_PROD_V4')) || [];
+  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_PROD_FINAL')) || [];
 
   window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
@@ -653,6 +658,11 @@
     document.querySelectorAll('.tra-exp-date').forEach(d => d.value = `${yyyy}-${mm}-${dd}`);
     document.querySelectorAll('.mil-date').forEach(d => d.value = `${yyyy}-${mm}-${dd}`);
 
+    // 初始化使用者
+    const savedUser = localStorage.getItem('CURRENT_USER_NAME') || '';
+    document.getElementById('globalUser').value = savedUser;
+    syncUser(savedUser);
+
     document.querySelectorAll('.proj-select').forEach(sel => {
       sel.innerHTML = `<option value="">— 請選擇專案 —</option>` + PROJECTS.map(p => `<option value="${p}">${p}</option>`).join('');
     });
@@ -662,6 +672,13 @@
     renderTravelList();
     renderReportTable();
   });
+
+  // 同步使用者姓名
+  function syncUser(name) {
+    localStorage.setItem('CURRENT_USER_NAME', name);
+    document.getElementById('expFormUser').value = name;
+    document.getElementById('traFormUser').value = name;
+  }
 
   function navigate(viewKey) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -773,6 +790,8 @@
 
   function savePureExpenseForm() {
     const total = calcPureExpTotal();
+    const applicant = document.getElementById('expFormUser').value.trim();
+    if (!applicant) { alert('請填寫申請人姓名！'); return; }
     if (total <= 0) { alert('請填寫至少一筆有金額的明細！'); return; }
 
     const details = [];
@@ -793,7 +812,7 @@
       id: REPORT_DATABASE.length + 1,
       applyDate: document.getElementById('expFormDate').value,
       billingMonth: document.getElementById('expFormDate').value.slice(0, 7),
-      applicant: document.getElementById('expFormUser').value || '郭楚葳',
+      applicant: applicant,
       project: document.getElementById('expFormProject').value,
       type: "費用申請",
       summary: descs.slice(0, 2).join(' + ') || "一般費用申請",
@@ -804,7 +823,7 @@
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_PROD_V4', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD_FINAL', JSON.stringify(REPORT_DATABASE));
     alert('費用申請單已成功儲存！');
     navigate('expense-list');
   }
@@ -1175,14 +1194,15 @@
     document.getElementById('grandTotal').innerText = `NT$ ${grand.toLocaleString()}`;
   }
 
-  // 修正後的送出差旅申請單邏輯
   function submitTravelForm() {
     let sumExpense = 0, sumCar = 0, sumMotor = 0;
     const details = [];
     const descs = [];
     let targetProject = "";
+    const applicant = document.getElementById('traFormUser').value.trim();
 
-    // 1. 抓取大眾運輸明細
+    if (!applicant) { alert('請填寫申請人姓名！'); return; }
+
     document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
       const amt = parseFloat(row.querySelector('.expense-amt')?.value) || 0;
       const cat = row.querySelector('.category-select option:checked')?.text || '大眾運輸';
@@ -1194,7 +1214,6 @@
       if (customInput) {
         desc = customInput.value || cat;
       } else {
-        // 若為下拉選單結構 (高鐵/台鐵/捷運)
         const selects = Array.from(row.querySelectorAll('.desc-cell select')).map(s => s.options[s.selectedIndex]?.text).filter(t => t && !t.includes('請選擇'));
         desc = selects.join(' ') || cat;
       }
@@ -1206,7 +1225,6 @@
       }
     });
 
-    // 2. 抓取開車里程
     document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
       const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
       const km = row.querySelector('.mileage-km')?.value || 0;
@@ -1224,7 +1242,6 @@
       }
     });
 
-    // 3. 抓取騎車里程
     document.querySelectorAll('#motorMileageTable tbody tr').forEach(row => {
       const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
       const km = row.querySelector('.mileage-km')?.value || 0;
@@ -1252,7 +1269,7 @@
       id: REPORT_DATABASE.length + 1,
       applyDate: document.getElementById('traApplyDate').value,
       billingMonth: document.getElementById('traBillingMonth').value,
-      applicant: document.getElementById('traFormUser').value || "郭楚葳",
+      applicant: applicant,
       project: targetProject || "—",
       type: "出差旅費",
       summary: descs.slice(0, 2).join(' + ') || "差旅核銷",
@@ -1263,7 +1280,7 @@
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_PROD_V4', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD_FINAL', JSON.stringify(REPORT_DATABASE));
     alert('出差旅費申請單已成功送出！');
     navigate('travel-list');
   }
