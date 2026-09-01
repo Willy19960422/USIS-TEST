@@ -24,7 +24,7 @@
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 0; }
     body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
 
-    /* 左側側邊欄 (純文字) */
+    /* 左側側邊欄 */
     .sidebar { width: 230px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 20px 12px; flex-shrink: 0; }
     .brand-title { font-size: 1.05rem; font-weight: bold; color: var(--text-title); margin-bottom: 24px; padding-left: 10px; }
     .nav-group-title { font-size: 0.75rem; color: #777; margin: 12px 0 6px 10px; font-weight: 600; text-transform: uppercase; }
@@ -121,7 +121,6 @@
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 800px; padding: 20px; max-height: 85vh; overflow-y: auto; }
 
-    /* PDF 完整明細區塊 (平時隱藏，列印時展開) */
     .print-details-container { display: none; }
 
     /* 列印專屬 CSS (PDF 匯出) */
@@ -166,7 +165,7 @@
   <!-- 主視圖區 -->
   <div class="main-content">
 
-    <!-- 1. 費用申請單列表 (預設全空) -->
+    <!-- 1. 費用申請單列表 -->
     <div id="view-expense-list" class="view-container active">
       <div class="card">
         <div class="header-bar">
@@ -186,9 +185,7 @@
               <th style="width: 5%; text-align:center;">操作</th>
             </tr>
           </thead>
-          <tbody id="expenseListBody">
-            <!-- 動態填入 -->
-          </tbody>
+          <tbody id="expenseListBody"></tbody>
         </table>
       </div>
     </div>
@@ -270,7 +267,7 @@
       </div>
     </div>
 
-    <!-- 3. 出差旅費申請單列表 (預設全空) -->
+    <!-- 3. 出差旅費申請單列表 -->
     <div id="view-travel-list" class="view-container">
       <div class="card">
         <div class="header-bar">
@@ -291,14 +288,12 @@
               <th style="width: 5%; text-align:center;">操作</th>
             </tr>
           </thead>
-          <tbody id="travelListBody">
-            <!-- 動態填入 -->
-          </tbody>
+          <tbody id="travelListBody"></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 4. 填寫出差旅費申請單 (預設全空) -->
+    <!-- 4. 填寫出差旅費申請單 -->
     <div id="view-travel-form" class="view-container">
       <div class="card">
         <h2>出差旅費申請單 (私車公用 / 大眾運輸)</h2>
@@ -534,7 +529,7 @@
           </tfoot>
         </table>
 
-        <!-- PDF 列印時自動展開的明細區塊 -->
+        <!-- PDF 匯出展開明細區塊 -->
         <div class="print-details-container" id="printDetailsBlock">
           <div class="print-details-title">申請單完整明細清單</div>
           <div id="printDetailsList"></div>
@@ -560,6 +555,7 @@
   const RATE_MOTOR = 3;
   const PROJECTS = ["專案 A - 台北展會", "專案 B - 廠區資安健檢", "公司內部營運", "業務推廣拓展"];
 
+  // 高鐵站點與票價
   const HSR_STATIONS = ["南港", "台北", "板橋", "桃園", "新竹", "苗栗", "台中", "彰化", "雲林", "嘉義", "台南", "左營"];
   const HSR_RESERVED_PRICES = {
     "南港": { "南港":0, "台北":40, "板橋":70, "桃園":200, "新竹":330, "苗栗":480, "台中":750, "彰化":870, "雲林":970, "嘉義":1120, "台南":1390, "左營":1530 },
@@ -590,31 +586,60 @@
     "左營": { "南港":1480, "台北":1445, "板橋":1415, "桃園":1290, "新竹":1160, "苗栗":1030, "台中":765, "彰化":650, "雲林":540, "嘉義":395, "台南":135, "左營":0 }
   };
 
+  // 全台完整台鐵車站清單 (包含全部縣市)
   const TRA_COUNTY_MAP = {
+    "基隆市": ["基隆", "三坑", "八堵", "七堵", "百福"],
+    "新北市": ["五堵", "汐止", "汐科", "板橋", "浮洲", "樹林", "南樹林", "山佳", "鶯歌", "瑞芳", "猴硐", "三貂嶺", "雙溪", "貢寮", "福隆"],
     "台北市": ["南港", "松山", "台北", "萬華"],
-    "新北市": ["板橋", "樹林", "鶯歌", "汐止", "瑞芳"],
-    "桃園市": ["桃園", "內壢", "中壢", "楊梅"],
-    "新竹縣市": ["竹北", "新竹", "竹東"],
-    "台中市": ["豐原", "台中", "大慶", "新烏日"],
-    "台南市": ["新營", "善化", "南科", "新市", "永康", "台南", "保安", "沙崙"],
-    "高雄市": ["岡山", "楠梓", "新左營", "左營", "高雄", "鳳山"]
+    "桃園市": ["桃園", "內壢", "中壢", "埔心", "楊梅", "富岡", "新富"],
+    "新竹縣市": ["北湖", "湖口", "新豐", "竹北", "北新竹", "新竹", "三姓橋", "香山", "竹中", "六家", "竹東", "內灣"],
+    "苗栗縣": ["崎頂", "竹南", "談文", "大山", "後龍", "白沙屯", "通霄", "苑裡", "造橋", "豐富", "苗栗", "南勢", "銅鑼", "三義"],
+    "台中市": ["日南", "大甲", "台中港", "清水", "沙鹿", "龍井", "大肚", "追分", "泰安", "后里", "豐原", "栗林", "潭子", "頭家厝", "松竹", "太原", "精武", "台中", "五權", "大慶", "烏日", "新烏日", "成功"],
+    "彰化縣": ["彰化", "花壇", "大村", "員林", "永靖", "社頭", "田中", "二水"],
+    "南投縣": ["源泉", "濁水", "龍泉", "集集", "水里", "車埕"],
+    "雲林縣": ["林內", "石榴", "斗六", "斗南", "石龜"],
+    "嘉義縣市": ["大林", "民雄", "嘉北", "嘉義", "水上", "南靖"],
+    "台南市": ["後壁", "新營", "柳營", "林鳳營", "隆田", "拔林", "善化", "南科", "新市", "永康", "大橋", "台南", "保安", "仁德", "中洲", "長榮大學", "沙崙"],
+    "高雄市": ["大湖", "路竹", "岡山", "橋頭", "楠梓", "新左營", "左營", "內惟", "美術館", "鼓山", "三塊厝", "高雄", "民族", "科工館", "正義", "鳳山", "後庄", "九曲堂"],
+    "屏東縣": ["六塊厝", "屏東", "歸來", "麟洛", "西勢", "竹田", "潮州", "崁頂", "南州", "鎮安", "林邊", "佳冬", "東海", "枋寮", "加祿", "枋山"],
+    "宜蘭縣": ["石城", "大里", "大溪", "龜山", "外澳", "頭城", "頂埔", "礁溪", "四城", "宜蘭", "二結", "中里", "羅東", "冬山", "新馬", "蘇澳新", "蘇澳", "東澳", "南澳"],
+    "花蓮縣": ["和平", "和仁", "崇德", "新城", "景美", "北埔", "花蓮", "吉安", "志學", "壽豐", "豐田", "溪口", "南平", "鳳林", "萬榮", "光復", "大富", "富源", "瑞穗", "三民", "玉里", "富里"],
+    "台東縣": ["池上", "海端", "關山", "月美", "瑞和", "瑞源", "鹿野", "山里", "台東", "康樂", "知本", "太麻里", "金崙", "瀧溪", "大武"]
   };
 
+  const TRA_KM_INDEX = {
+    "基隆": 0, "七堵": 8.6, "汐止": 18.0, "台北": 28.3, "板橋": 35.5, "樹林": 40.9, "鶯歌": 49.2, "桃園": 57.4, "中壢": 67.3, "楊梅": 79.2, "新竹": 106.4,
+    "竹南": 125.4, "苗栗": 140.6, "三義": 158.8, "豐原": 179.8, "台中": 193.3, "新烏日": 201.6, "彰化": 210.9, "員林": 225.6, "田中": 239.3, "二水": 249.2,
+    "斗六": 260.8, "斗南": 268.6, "嘉義": 291.8, "新營": 319.4, "善化": 342.3, "新市": 349.7, "台南": 358.2, "保安": 366.0, "沙崙": 372.0, "岡山": 384.5,
+    "新左營": 399.8, "高雄": 406.1, "鳳山": 411.8, "屏東": 427.2, "潮州": 443.0, "枋寮": 466.0, "礁溪": 74.0, "宜蘭": 82.5, "羅東": 91.5, "蘇澳新": 101.0,
+    "花蓮": 179.0, "玉里": 267.0, "池上": 296.0, "台東": 346.0
+  };
+  const TRA_RATES = { "自強": 2.27, "莒光": 1.75, "區間": 1.46 };
+
+  // 捷運完整站點
   const MRT_DATA = {
     "台北捷運": {
-      "板南線 (藍線)": ["頂埔", "板橋", "西門", "台北車站", "忠孝新生", "忠孝復興", "市政府", "南港"],
-      "淡水信義線 (紅線)": ["淡水", "北投", "士林", "圓山", "台北車站", "大安", "台北101/世貿", "象山"]
+      "板南線 (藍線)": ["頂埔", "永寧", "土城", "海山", "亞東醫院", "府中", "板橋", "新埔", "江子翠", "龍山寺", "西門", "台北車站", "善導寺", "忠孝新生", "忠孝復興", "忠孝敦化", "國父紀念館", "市政府", "永春", "後山埤", "昆陽", "南港", "南港展覽館"],
+      "淡水信義線 (紅線)": ["淡水", "紅樹林", "竹圍", "關渡", "忠義", "復興崗", "北投", "新北投", "奇岩", "唭哩岸", "石牌", "明德", "芝山", "士林", "劍潭", "圓山", "民權西路", "雙連", "中山", "台北車站", "台大醫院", "中正紀念堂", "東門", "大安森林公園", "大安", "信義安和", "台北101/世貿", "象山"],
+      "松山新店線 (綠線)": ["松山", "南京三民", "台北小巨蛋", "南京復興", "松江南京", "中山", "北門", "西門", "小南門", "中正紀念堂", "古亭", "台電大樓", "公館", "萬隆", "景美", "大坪林", "七張", "小碧潭", "新店區公所", "新店"],
+      "中和新蘆線 (橘線)": ["蘆洲", "三民高中", "徐匯中學", "三和國中", "三重國小", "迴龍", "丹鳳", "輔大", "新莊", "頭前庄", "先嗇宮", "三重", "菜寮", "台北橋", "大橋頭", "民權西路", "中山國小", "行天宮", "松江南京", "忠孝新生", "東門", "古亭", "頂溪", "永安市場", "景安", "南勢角"],
+      "文湖線 (棕線)": ["南港展覽館", "南港軟體園區", "東湖", "葫洲", "大湖公園", "內湖", "文德", "港墘", "西湖", "劍南路", "大直", "松山機場", "中山國中", "南京復興", "忠孝復興", "大安", "科技大樓", "六張犁", "麟光", "辛亥", "萬芳醫院", "萬芳社區", "木柵", "動物園"]
+    },
+    "桃園捷運": {
+      "機場捷運線": ["A1 台北車站", "A2 三重", "A3 新北產業園區", "A4 新莊副都心", "A5 泰山", "A6 泰山貴和", "A7 體育大學", "A8 長庚醫院", "A9 林口", "A10 山鼻", "A11 坑口", "A12 第一航廈", "A13 第二航廈", "A14a 機場旅館", "A15 大園", "A16 橫山", "A17 領航", "A18 高鐵桃園站", "A19 桃園體育園區", "A20 興南", "A21 環北", "A22 老街溪"]
+    },
+    "台中捷運": {
+      "綠線 (烏日文心北屯線)": ["北屯總站", "舊社", "松竹", "四維國小", "文心崇德", "文心中清", "文華高中", "文心櫻花", "市政府", "水安宮", "文心森林公園", "南屯", "豐樂公園", "大慶", "九張犁", "九德", "烏日", "高鐵台中站"]
     },
     "高雄捷運": {
-      "紅線": ["岡山車站", "南岡山", "左營/高鐵", "巨蛋", "高雄車站", "美麗島", "中央公園", "三多商圈", "草衙", "小港"],
-      "橘線": ["哈瑪星", "市議會", "美麗島", "文化中心", "衛武營", "鳳山"]
-    },
-    "台中捷運": { "綠線": ["北屯總站", "松竹", "市政府", "大慶", "高鐵台中站"] },
-    "桃園捷運": { "機場捷運": ["A1 台北車站", "A3 新北產業園區", "A8 長庚醫院", "A12 第一航廈", "A13 第二航廈", "A18 高鐵桃園站"] }
+      "紅線": ["岡山車站", "南岡山", "橋頭火車站", "橋頭糖廠", "青埔", "都會公園", "後勁", "楠梓科技園區", "油廠國小", "世運", "左營/高鐵", "生態園區", "巨蛋", "凹子底", "後驛", "高雄車站", "美麗島", "中央公園", "三多商圈", "獅甲", "凱旋", "前鎮高中", "草衙", "高雄國際機場", "小港"],
+      "橘線": ["哈瑪星", "市議會", "美麗島", "信義國小", "文化中心", "五塊厝", "技擊館", "衛武營", "鳳山西站", "鳳山", "大東", "鳳山國中", "大寮"],
+      "環狀輕軌 (C線)": ["C1 籬仔內", "C2 凱旋瑞田", "C3 前鎮之星", "C4 凱旋中華", "C5 夢時代", "C6 經貿園區", "C7 軟體園區", "C8 高雄展覽館", "C9 旅運中心", "C10 光榮碼頭", "C11 真愛碼頭", "C12 駁二大義", "C13 駁二蓬萊", "C14 哈瑪星", "C15 壽山公園", "C16 文武聖殿", "C17 鼓山區公所", "C18 鼓山", "C19 馬卡道", "C20 台鐵美術館", "C21 美術館", "C22 聯合醫院", "C23 龍華國小", "C24 愛河之心", "C25 新上國小", "C26 灣仔內", "C27 鼎山街", "C28 高雄高工", "C29 樹德家商", "C30 科工館", "C31 聖功醫院", "C32 凱旋公園"]
+    }
   };
 
-  // 全域資料庫（完全預設為空，不含任何假資料）
-  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_EMPTY')) || [];
+  // 全域資料庫（完全預設為空）
+  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_PROD')) || [];
 
   window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
@@ -783,7 +808,7 @@
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_EMPTY', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD', JSON.stringify(REPORT_DATABASE));
     alert('費用申請單已成功儲存！');
     navigate('expense-list');
   }
@@ -844,17 +869,19 @@
     const counties = Object.keys(TRA_COUNTY_MAP);
     descCell.innerHTML = `
       <div class="selector-box">
-        <select class="tra-type" style="width: 80px;"><option value="自強">自強號</option><option value="區間">區間車</option></select>
+        <select class="tra-type" onchange="updateTraPrice(this)" style="width: 80px;">
+          <option value="自強">自強號</option><option value="莒光">莒光號</option><option value="區間">區間車</option>
+        </select>
         <select class="tra-from-c" onchange="onTraCountyChange(this, 'from')" style="width: 100px;">
           <option value="">— 出發縣市 —</option>${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
-        <select class="tra-from-s" style="width: 85px;"><option value="">— 站名 —</option></select>
+        <select class="tra-from-s" onchange="updateTraPrice(this)" style="width: 85px;"><option value="">— 站名 —</option></select>
         <span style="color:#aaa;">➔</span>
         <select class="tra-to-c" onchange="onTraCountyChange(this, 'to')" style="width: 100px;">
           <option value="">— 到達縣市 —</option>${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
-        <select class="tra-to-s" style="width: 85px;"><option value="">— 站名 —</option></select>
-        <select class="tra-trip" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
+        <select class="tra-to-s" onchange="updateTraPrice(this)" style="width: 85px;"><option value="">— 站名 —</option></select>
+        <select class="tra-trip" onchange="updateTraPrice(this)" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
       </div>
     `;
     row.querySelector('.expense-amt').value = '';
@@ -867,6 +894,45 @@
     const stationSelect = row.querySelector(`.tra-${direction}-s`);
     const stations = TRA_COUNTY_MAP[county] || [];
     stationSelect.innerHTML = `<option value="">— 站名 —</option>` + stations.map(s => `<option value="${s}">${s}站</option>`).join('');
+    updateTraPrice(elem);
+  }
+
+  function updateTraPrice(elem) {
+    const row = elem.closest('tr');
+    const type = row.querySelector('.tra-type').value;
+    const from = row.querySelector('.tra-from-s').value;
+    const to = row.querySelector('.tra-to-s').value;
+    const multiplier = parseInt(row.querySelector('.tra-trip').value, 10);
+
+    if (!from || !to || from === to) {
+      row.querySelector('.expense-amt').value = '';
+      calculateGrandTotal();
+      return;
+    }
+
+    const cleanFrom = from.replace('站', '');
+    const cleanTo = to.replace('站', '');
+
+    const getKm = (st) => {
+      if (TRA_KM_INDEX[st] !== undefined) return TRA_KM_INDEX[st];
+      for (const [cName, stList] of Object.entries(TRA_COUNTY_MAP)) {
+        if (stList.includes(st)) {
+          for (const s of stList) {
+            if (TRA_KM_INDEX[s] !== undefined) return TRA_KM_INDEX[s];
+          }
+        }
+      }
+      return 20;
+    };
+
+    const dist = Math.abs(getKm(cleanFrom) - getKm(cleanTo)) || 15;
+    const rate = TRA_RATES[type] || 2.27;
+    let singlePrice = Math.round(dist * rate);
+    if (type === "自強" && singlePrice < 23) singlePrice = 23;
+    if (type === "區間" && singlePrice < 15) singlePrice = 15;
+
+    row.querySelector('.expense-amt').value = singlePrice * multiplier;
+    calculateGrandTotal();
   }
 
   function renderMrtSelector(row) {
@@ -878,11 +944,11 @@
           <option value="">— 捷運系統 —</option>${mrtSystems.map(sys => `<option value="${sys}">${sys}</option>`).join('')}
         </select>
         <select class="mrt-from-line" onchange="onMrtLineChange(this, 'from')" style="width: 110px;"><option value="">— 出發路線 —</option></select>
-        <select class="mrt-from-s" style="width: 100px;"><option value="">— 出發站 —</option></select>
+        <select class="mrt-from-s" onchange="updateMrtPrice(this)" style="width: 100px;"><option value="">— 出發站 —</option></select>
         <span style="color:#aaa;">➔</span>
         <select class="mrt-to-line" onchange="onMrtLineChange(this, 'to')" style="width: 110px;"><option value="">— 到達路線 —</option></select>
-        <select class="mrt-to-s" style="width: 100px;"><option value="">— 到達站 —</option></select>
-        <select class="mrt-trip" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
+        <select class="mrt-to-s" onchange="updateMrtPrice(this)" style="width: 100px;"><option value="">— 到達站 —</option></select>
+        <select class="mrt-trip" onchange="updateMrtPrice(this)" style="width: 75px;"><option value="1">單程</option><option value="2">來回</option></select>
       </div>
     `;
     row.querySelector('.expense-amt').value = '';
@@ -894,6 +960,8 @@
     const system = elem.value;
     const fromLineSel = row.querySelector('.mrt-from-line');
     const toLineSel = row.querySelector('.mrt-to-line');
+    row.querySelector('.mrt-from-s').innerHTML = `<option value="">— 出發站 —</option>`;
+    row.querySelector('.mrt-to-s').innerHTML = `<option value="">— 到達站 —</option>`;
     if (!system || !MRT_DATA[system]) return;
     const lines = Object.keys(MRT_DATA[system]);
     const lineOptions = `<option value="">— 請選路線 —</option>` + lines.map(l => `<option value="${l}">${l}</option>`).join('');
@@ -908,6 +976,53 @@
     const stationSel = row.querySelector(`.mrt-${direction}-s`);
     if (!system || !line || !MRT_DATA[system][line]) return;
     stationSel.innerHTML = `<option value="">— 請選站名 —</option>` + MRT_DATA[system][line].map(s => `<option value="${s}">${s}</option>`).join('');
+  }
+
+  function updateMrtPrice(elem) {
+    const row = elem.closest('tr');
+    const system = row.querySelector('.mrt-system').value;
+    const fromLine = row.querySelector('.mrt-from-line').value;
+    const toLine = row.querySelector('.mrt-to-line').value;
+    const from = row.querySelector('.mrt-from-s').value;
+    const to = row.querySelector('.mrt-to-s').value;
+    const multiplier = parseInt(row.querySelector('.mrt-trip').value, 10);
+
+    if (!system || !from || !to || from === to) {
+      row.querySelector('.expense-amt').value = '';
+      calculateGrandTotal();
+      return;
+    }
+
+    let singlePrice = 20;
+    if (system === '台北捷運') {
+      if (fromLine === toLine) {
+        const list = MRT_DATA[system][fromLine];
+        const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
+        singlePrice = 20 + Math.floor(stopCount / 4) * 5;
+        if (singlePrice > 65) singlePrice = 65;
+      } else singlePrice = 30;
+    } else if (system === '桃園捷運') {
+      const list = MRT_DATA[system]["機場捷運線"];
+      const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
+      singlePrice = 25 + stopCount * 7;
+      if (singlePrice > 160) singlePrice = 160;
+    } else if (system === '台中捷運') {
+      const list = MRT_DATA[system]["綠線 (烏日文心北屯線)"];
+      const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
+      singlePrice = 20 + Math.floor(stopCount / 3) * 5;
+      if (singlePrice > 50) singlePrice = 50;
+    } else if (system === '高雄捷運') {
+      if (fromLine.includes('輕軌') || toLine.includes('輕軌')) singlePrice = 25;
+      else if (fromLine === toLine) {
+        const list = MRT_DATA[system][fromLine];
+        const stopCount = Math.abs(list.indexOf(from) - list.indexOf(to));
+        singlePrice = 20 + Math.floor(stopCount / 4) * 5;
+        if (singlePrice > 60) singlePrice = 60;
+      } else singlePrice = 35;
+    }
+
+    row.querySelector('.expense-amt').value = singlePrice * multiplier;
+    calculateGrandTotal();
   }
 
   function fetchDistance(btn, rate) {
@@ -1119,7 +1234,7 @@
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_EMPTY', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD', JSON.stringify(REPORT_DATABASE));
     alert('出差旅費申請單已成功送出！');
     navigate('travel-list');
   }
