@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>企業費用與差旅報銷系統</title>
+  
   <style>
     :root {
       --bg-body: #121214;
@@ -71,15 +72,17 @@
     }
     input:focus, select:focus, textarea:focus { border-color: var(--accent-hover); }
 
-    .btn { cursor: pointer; padding: 6px 14px; border-radius: 4px; border: none; font-size: 0.85rem; transition: 0.2s; font-weight: 500; display: inline-flex; align-items: center; }
+    .btn { cursor: pointer; padding: 6px 14px; border-radius: 4px; border: none; font-size: 0.85rem; transition: 0.2s; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; }
     .btn-primary { background-color: var(--accent); color: white; }
     .btn-primary:hover { background-color: var(--accent-hover); }
+    .btn-draft { background-color: #3b3b44; color: #facc15; border: 1px solid #71717a; }
+    .btn-draft:hover { background-color: #4a4a55; color: #fef08a; }
     .btn-danger { background-color: transparent; color: var(--danger); border: 1px solid var(--danger); }
     .btn-danger:hover { background-color: var(--danger); color: white; }
     .btn-green { background-color: var(--success); color: white; }
     .btn-green:hover { background-color: #059669; }
-    .btn-calc { background-color: #383838; color: #9cdcfe; border: 1px solid #555; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; white-space: nowrap; }
-    .btn-calc:hover { background-color: #4a4a4a; }
+    .btn-calc { background-color: #2e3440; color: #60a5fa; border: 1px solid #3b82f6; padding: 5px 12px; font-size: 0.8rem; border-radius: 4px; white-space: nowrap; font-weight: 600; }
+    .btn-calc:hover { background-color: #2563eb; color: #fff; }
 
     .dynamic-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
     .dynamic-table th { background-color: #18181c; color: #aaa; font-weight: 500; font-size: 0.8rem; text-align: left; padding: 10px 8px; border: 1px solid var(--border-color); }
@@ -102,6 +105,7 @@
     .tag-travel { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
     .tag-expense { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
     .tag-approved { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag-draft { background: rgba(161, 161, 170, 0.2); color: #facc15; border: 1px solid #71717a; }
 
     .summary-card {
       background: #18181c;
@@ -118,142 +122,57 @@
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
     .summary-total { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: var(--text-title); border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 10px; }
 
-    /* Modal */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 1000; }
+    /* Modal 通用樣式 */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; width: 90%; max-width: 800px; padding: 20px; max-height: 85vh; overflow-y: auto; }
+
+    /* Google 路線確認彈窗樣式 */
+    .map-modal-content {
+      background: #ffffff !important;
+      color: #1f2937 !important;
+      border-radius: 12px;
+      max-width: 620px;
+      width: 95%;
+      padding: 20px 24px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+    .map-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+    .map-title { font-size: 1.25rem; font-weight: 700; color: #111827; }
+    .map-result-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 16px; margin-bottom: 14px; text-align: center; }
+    .map-km-highlight { font-size: 2rem; font-weight: 800; color: #15803d; }
+    .map-route-text { font-size: 0.95rem; font-weight: 600; color: #1f2937; margin-bottom: 6px; }
+    .map-sub-info { font-size: 0.85rem; color: #4b5563; }
 
     .print-only { display: none; }
 
-    /* =========================================
-       專業 PDF 列印排版 (A4 最佳化)
-    ========================================= */
+    /* PDF 專用列印樣式 */
     @media print {
-      @page {
-        size: A4 portrait;
-        margin: 15mm 12mm 15mm 12mm;
-      }
-
+      @page { size: A4 portrait; margin: 15mm 12mm 15mm 12mm; }
       body { background: #ffffff !important; color: #1f2937 !important; font-size: 9pt; }
       .sidebar, .filter-bar, .btn, .header-bar button, .modal-overlay, #actionCol, .action-cell { display: none !important; }
       .main-content { padding: 0 !important; overflow: visible !important; }
       .card { border: none !important; box-shadow: none !important; padding: 0 !important; background: #ffffff !important; }
-
       .print-only { display: block !important; }
-
-      /* PDF 頂部標頭 */
-      .pdf-header {
-        border-bottom: 2px solid #1e3a8a;
-        padding-bottom: 8px;
-        margin-bottom: 12px;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-      }
+      .pdf-header { border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end; }
       .pdf-title { font-size: 16pt; font-weight: 800; color: #1e3a8a; letter-spacing: 1px; }
       .pdf-meta { font-size: 8.5pt; color: #4b5563; text-align: right; line-height: 1.4; }
-
-      /* PDF 資訊摘要表 */
-      .pdf-info-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        background: #f8fafc;
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        padding: 8px 12px;
-        margin-bottom: 14px;
-        font-size: 8.5pt;
-      }
-      .pdf-info-grid div { line-height: 1.5; }
-
-      /* PDF 統計看板卡片 */
-      .stats-container {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr 1fr !important;
-        gap: 10px !important;
-        margin-bottom: 16px !important;
-      }
-      .stat-box {
-        background: #f1f5f9 !important;
-        border: 1px solid #cbd5e1 !important;
-        border-radius: 4px !important;
-        padding: 8px 10px !important;
-        text-align: center !important;
-      }
+      .pdf-info-grid { display: grid; grid-template-columns: repeat(4, 1fr); background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 12px; margin-bottom: 14px; font-size: 8.5pt; }
+      .stats-container { display: grid !important; grid-template-columns: 1fr 1fr 1fr !important; gap: 10px !important; margin-bottom: 16px !important; }
+      .stat-box { background: #f1f5f9 !important; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; padding: 8px 10px !important; text-align: center !important; }
       .stat-box .title { font-size: 8pt !important; color: #475569 !important; margin-bottom: 2px !important; font-weight: 600; }
       .stat-box .value { font-size: 12pt !important; font-weight: bold !important; color: #0f172a !important; }
-
-      /* PDF 主彙總表 */
-      .section-heading {
-        font-size: 10pt;
-        font-weight: 700;
-        color: #1e3a8a;
-        margin: 14px 0 6px 0;
-        border-left: 3px solid #2563eb;
-        padding-left: 6px;
-      }
-      .dynamic-table {
-        color: #000 !important;
-        border-collapse: collapse !important;
-        width: 100% !important;
-        margin-top: 4px !important;
-      }
-      .dynamic-table th {
-        background-color: #e2e8f0 !important;
-        color: #1e293b !important;
-        font-weight: 700 !important;
-        border: 1px solid #94a3b8 !important;
-        padding: 5px 6px !important;
-        font-size: 8.5pt !important;
-      }
-      .dynamic-table td {
-        border: 1px solid #cbd5e1 !important;
-        color: #1f2937 !important;
-        background: #ffffff !important;
-        padding: 5px 6px !important;
-        font-size: 8.5pt !important;
-      }
+      .section-heading { font-size: 10pt; font-weight: 700; color: #1e3a8a; margin: 14px 0 6px 0; border-left: 3px solid #2563eb; padding-left: 6px; }
+      .dynamic-table { color: #000 !important; border-collapse: collapse !important; width: 100% !important; margin-top: 4px !important; }
+      .dynamic-table th { background-color: #e2e8f0 !important; color: #1e293b !important; font-weight: 700 !important; border: 1px solid #94a3b8 !important; padding: 5px 6px !important; font-size: 8.5pt !important; }
+      .dynamic-table td { border: 1px solid #cbd5e1 !important; color: #1f2937 !important; background: #ffffff !important; padding: 5px 6px !important; font-size: 8.5pt !important; }
       .tag { border: 1px solid #64748b !important; color: #0f172a !important; background: transparent !important; padding: 1px 6px !important; font-size: 7.5pt !important; }
-
-      /* PDF 展開明細專區 */
-      .pdf-detail-card {
-        border: 1px solid #cbd5e1;
-        border-radius: 4px;
-        padding: 8px 10px;
-        margin-bottom: 10px;
-        background: #fafafa;
-        page-break-inside: avoid;
-      }
-      .pdf-detail-header {
-        font-weight: bold;
-        font-size: 8.5pt;
-        color: #1e3a8a;
-        margin-bottom: 4px;
-        display: flex;
-        justify-content: space-between;
-        border-bottom: 1px solid #e2e8f0;
-        padding-bottom: 3px;
-      }
+      .pdf-detail-card { border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; background: #fafafa; page-break-inside: avoid; }
+      .pdf-detail-header { font-weight: bold; font-size: 8.5pt; color: #1e3a8a; margin-bottom: 4px; display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px; }
       .pdf-subtable { width: 100%; border-collapse: collapse; font-size: 8pt; margin-top: 4px; }
       .pdf-subtable th { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 3px 5px; text-align: left; }
       .pdf-subtable td { border: 1px solid #e2e8f0; padding: 3px 5px; }
-
-      /* PDF 簽核欄位 */
-      .pdf-signatures {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-top: 28px;
-        page-break-inside: avoid;
-      }
-      .sig-box {
-        border: 1px dashed #94a3b8;
-        border-radius: 4px;
-        height: 65px;
-        padding: 6px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-      }
+      .pdf-signatures { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 28px; page-break-inside: avoid; }
+      .sig-box { border: 1px dashed #94a3b8; border-radius: 4px; height: 65px; padding: 6px; display: flex; flex-direction: column; justify-content: space-between; }
       .sig-title { font-size: 8pt; font-weight: 600; color: #475569; }
       .sig-line { border-bottom: 1px solid #64748b; margin-top: auto; }
     }
@@ -264,21 +183,11 @@
   <!-- 左側導覽列 -->
   <div class="sidebar">
     <div class="brand-title">財務報銷系統</div>
-    
-    <div class="nav-item active" onclick="navigate('expense-list')">
-      費用申請單
-    </div>
-    
-    <div class="nav-item" onclick="navigate('travel-list')">
-      出差旅費申請單
-    </div>
-    
+    <div class="nav-item active" onclick="navigate('expense-list')">費用申請單</div>
+    <div class="nav-item" onclick="navigate('travel-list')">出差旅費申請單</div>
     <div class="nav-group-title">費用月報</div>
-    <div class="nav-item" onclick="navigate('report-view')">
-      費用/差旅月報單
-    </div>
-
-    <!-- 底部登入同仁設定 -->
+    <div class="nav-item" onclick="navigate('report-view')">費用/差旅月報單</div>
+    
     <div style="margin-top:auto; padding-top:16px; border-top:1px solid var(--border-color);">
       <div style="font-size:0.75rem; color:#777; margin-bottom:4px;">當前登入者</div>
       <input type="text" id="globalUser" placeholder="請輸入姓名" oninput="syncUser(this.value)">
@@ -293,7 +202,7 @@
       <div class="card">
         <div class="header-bar">
           <h2>費用申請單</h2>
-          <button class="btn btn-primary" onclick="navigate('expense-form')">+ 新增申請單</button>
+          <button class="btn btn-primary" onclick="startNewExpenseForm()">+ 新增申請單</button>
         </div>
         <table class="dynamic-table">
           <thead>
@@ -305,7 +214,7 @@
               <th style="width: 12%; text-align:center;">狀態</th>
               <th style="width: 15%;">金額合計</th>
               <th style="width: 8%; text-align:center;">筆數</th>
-              <th style="width: 5%; text-align:center;">操作</th>
+              <th style="width: 12%; text-align:center;">操作</th>
             </tr>
           </thead>
           <tbody id="expenseListBody"></tbody>
@@ -316,16 +225,13 @@
     <!-- 2. 填寫費用申請單 -->
     <div id="view-expense-form" class="view-container">
       <div class="card">
-        <h2>申請資訊</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 id="expFormTitle">填寫費用申請單</h2>
+          <input type="hidden" id="expEditingId" value="">
+        </div>
         <div class="grid-3" style="margin-top:16px;">
-          <div class="form-group">
-            <label>填單日期 *</label>
-            <input type="date" id="expFormDate">
-          </div>
-          <div class="form-group">
-            <label>申請人 *</label>
-            <input type="text" id="expFormUser" placeholder="請輸入申請人姓名">
-          </div>
+          <div class="form-group"><label>填單日期 *</label><input type="date" id="expFormDate"></div>
+          <div class="form-group"><label>申請人 *</label><input type="text" id="expFormUser" placeholder="請輸入申請人姓名"></div>
           <div class="form-group">
             <label>關聯專案</label>
             <select id="expFormProject">
@@ -335,12 +241,9 @@
             </select>
           </div>
         </div>
-        <div class="form-group" style="margin-bottom:20px;">
-          <label>備註</label>
-          <input type="text" id="expFormMemo" placeholder="選填備註說明">
-        </div>
+        <div class="form-group" style="margin-bottom:20px;"><label>備註</label><input type="text" id="expFormMemo" placeholder="選填備註說明"></div>
 
-        <div class="section-title">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
           <span>費用明細</span>
           <button class="btn btn-primary" onclick="addExpensePureRow()">+ 新增一筆</button>
         </div>
@@ -383,9 +286,13 @@
           </tfoot>
         </table>
 
-        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 10px;">
-          <button class="btn btn-primary" style="padding:8px 22px;" onclick="savePureExpenseForm()">儲存</button>
-          <button class="btn" style="background:#444; color:#fff; padding:8px 18px;" onclick="navigate('expense-list')">取消</button>
+        <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" id="expDeleteDraftBtn" class="btn btn-danger" style="display:none;" onclick="deleteCurrentExpenseDraft()">刪除此草稿</button>
+          <div style="display: flex; gap: 10px; margin-left: auto;">
+            <button class="btn btn-draft" style="padding:8px 18px;" onclick="saveExpenseDraftOrSubmit(true)">儲存成草稿</button>
+            <button class="btn btn-primary" style="padding:8px 22px;" onclick="saveExpenseDraftOrSubmit(false)">正式送出申請單</button>
+            <button class="btn" style="background:#444; color:#fff; padding:8px 18px;" onclick="navigate('expense-list')">取消</button>
+          </div>
         </div>
       </div>
     </div>
@@ -395,7 +302,7 @@
       <div class="card">
         <div class="header-bar">
           <h2>出差旅費申請單</h2>
-          <button class="btn btn-primary" onclick="navigate('travel-form')">+ 新增申請單</button>
+          <button class="btn btn-primary" onclick="startNewTravelForm()">+ 新增申請單</button>
         </div>
         <table class="dynamic-table">
           <thead>
@@ -408,7 +315,7 @@
               <th style="width: 18%;">出差事由</th>
               <th style="width: 10%; text-align:center;">狀態</th>
               <th style="width: 12%;">金額合計</th>
-              <th style="width: 5%; text-align:center;">操作</th>
+              <th style="width: 8%; text-align:center;">操作</th>
             </tr>
           </thead>
           <tbody id="travelListBody"></tbody>
@@ -419,23 +326,17 @@
     <!-- 4. 填寫出差旅費申請單 -->
     <div id="view-travel-form" class="view-container">
       <div class="card">
-        <h2>出差旅費申請單 (私車公用 / 大眾運輸)</h2>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 id="traFormTitle">出差旅費申請單 (私車公用 / 大眾運輸)</h2>
+          <input type="hidden" id="traEditingId" value="">
+        </div>
         <div class="grid-3" style="margin-top:16px;">
-          <div class="form-group">
-            <label>申請日期</label>
-            <input type="date" id="traApplyDate">
-          </div>
-          <div class="form-group">
-            <label>歸屬月份</label>
-            <input type="month" id="traBillingMonth">
-          </div>
-          <div class="form-group">
-            <label>申請人</label>
-            <input type="text" id="traFormUser" placeholder="請輸入申請人姓名">
-          </div>
+          <div class="form-group"><label>申請日期</label><input type="date" id="traApplyDate"></div>
+          <div class="form-group"><label>歸屬月份</label><input type="month" id="traBillingMonth"></div>
+          <div class="form-group"><label>申請人</label><input type="text" id="traFormUser" placeholder="請輸入申請人姓名"></div>
         </div>
 
-        <div class="section-title">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
           <span>大眾運輸與單據報銷 (高鐵／台鐵／捷運全自動計價)</span>
           <button type="button" class="btn btn-primary" onclick="addTravelExpenseRow()">+ 新增費用項目</button>
         </div>
@@ -472,7 +373,7 @@
           </tbody>
         </table>
 
-        <div class="section-title">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
           <span>開車費用計算 (私車公用：6 元/公里)</span>
           <button type="button" class="btn btn-primary" onclick="addCarMileageRow()">+ 新增出差車程</button>
         </div>
@@ -498,7 +399,7 @@
               <td><input type="text" class="origin-input" placeholder="出發地點 (如: 台中高鐵站)"></td>
               <td><input type="text" class="dest-input" placeholder="目的地點 (如: 台北高鐵站)"></td>
               <td><input type="text" class="reason-input" placeholder="出差事由"></td>
-              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
+              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchGoogleMapsDistance(this, 6)">測距</button></td>
               <td>
                 <input type="hidden" class="base-one-way-km" value="0">
                 <select class="trip-type-select" onchange="onTripTypeChange(this, 6)">
@@ -513,7 +414,7 @@
           </tbody>
         </table>
 
-        <div class="section-title">
+        <div class="section-title" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
           <span>騎車費用計算 (私機公用：3 元/公里)</span>
           <button type="button" class="btn btn-primary" onclick="addMotorMileageRow()">+ 新增騎車行程</button>
         </div>
@@ -539,7 +440,7 @@
               <td><input type="text" class="origin-input" placeholder="出發地點"></td>
               <td><input type="text" class="dest-input" placeholder="目的地點"></td>
               <td><input type="text" class="reason-input" placeholder="行程事由"></td>
-              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button></td>
+              <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchGoogleMapsDistance(this, 3)">測距</button></td>
               <td>
                 <input type="hidden" class="base-one-way-km" value="0">
                 <select class="trip-type-select" onchange="onTripTypeChange(this, 3)">
@@ -567,9 +468,13 @@
           </div>
         </div>
 
-        <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px;">
-          <button type="button" class="btn btn-primary" style="padding: 10px 24px; font-weight:bold;" onclick="submitTravelForm()">送出差旅申請單</button>
-          <button type="button" class="btn" style="background:#444; color:#fff; padding: 10px 18px;" onclick="navigate('travel-list')">取消</button>
+        <div style="margin-top: 24px; display: flex; justify-content: space-between; align-items: center;">
+          <button type="button" id="traDeleteDraftBtn" class="btn btn-danger" style="display:none;" onclick="deleteCurrentTravelDraft()">刪除此草稿</button>
+          <div style="display: flex; gap: 12px; margin-left: auto;">
+            <button type="button" class="btn btn-draft" style="padding: 10px 20px;" onclick="saveTravelDraftOrSubmit(true)">儲存成草稿</button>
+            <button type="button" class="btn btn-primary" style="padding: 10px 24px; font-weight:bold;" onclick="saveTravelDraftOrSubmit(false)">送出差旅申請單</button>
+            <button type="button" class="btn" style="background:#444; color:#fff; padding: 10px 18px;" onclick="navigate('travel-list')">取消</button>
+          </div>
         </div>
       </div>
     </div>
@@ -577,8 +482,6 @@
     <!-- 5. 費用/差旅月報單 (PDF 列印美化版) -->
     <div id="view-report-view" class="view-container">
       <div class="card">
-        
-        <!-- PDF 專屬美化抬頭 -->
         <div class="print-only">
           <div class="pdf-header">
             <div>
@@ -590,7 +493,6 @@
               <div><strong>核銷狀態：</strong>已審核通過</div>
             </div>
           </div>
-
           <div class="pdf-info-grid">
             <div><strong>歸屬期間：</strong><span id="pdfPeriod"></span></div>
             <div><strong>申請同仁：</strong><span id="pdfApplicantName"></span></div>
@@ -628,7 +530,6 @@
           </div>
         </div>
 
-        <!-- 統計看板 -->
         <div class="stats-container">
           <div class="stat-box">
             <div class="title">費用申請合計</div>
@@ -644,8 +545,7 @@
           </div>
         </div>
 
-        <!-- 彙總主表 -->
-        <div class="print-only section-heading">一、 單據總結清單</div>
+        <div class="print-only section-heading">一、 單據總結清單 (排除草稿)</div>
         <table class="dynamic-table" id="reportTable">
           <thead>
             <tr>
@@ -672,34 +572,46 @@
           </tfoot>
         </table>
 
-        <!-- PDF 匯出展開的詳細細目區塊 -->
         <div class="print-only">
           <div class="section-heading" style="margin-top:20px;">二、 各項核銷明細細目</div>
           <div id="printDetailsList"></div>
 
-          <!-- 簽核區塊 -->
           <div class="pdf-signatures">
-            <div class="sig-box">
-              <span class="sig-title">申請同仁簽章：</span>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-box">
-              <span class="sig-title">部門主管審核：</span>
-              <div class="sig-line"></div>
-            </div>
-            <div class="sig-box">
-              <span class="sig-title">財務/出納核決：</span>
-              <div class="sig-line"></div>
-            </div>
+            <div class="sig-box"><span class="sig-title">申請同仁簽章：</span><div class="sig-line"></div></div>
+            <div class="sig-box"><span class="sig-title">部門主管審核：</span><div class="sig-line"></div></div>
+            <div class="sig-box"><span class="sig-title">財務/出納核決：</span><div class="sig-line"></div></div>
           </div>
         </div>
-
       </div>
     </div>
-
   </div>
 
-  <!-- 明細 Modal (網頁查看) -->
+  <!-- ★ Google Maps 測距確認視窗 -->
+  <div class="modal-overlay" id="googleMapModal">
+    <div class="map-modal-content">
+      <div class="map-header">
+        <div class="map-title">Google Maps 測距確認</div>
+        <button class="btn btn-danger" style="padding: 4px 10px;" onclick="closeGoogleMapModal()">✕</button>
+      </div>
+
+      <div class="map-result-box">
+        <div style="font-size: 0.9rem; color: #166534; font-weight: 600; margin-bottom: 4px;">單程行車距離</div>
+        <div class="map-km-highlight" id="modalKmNumber">0.0 km</div>
+      </div>
+
+      <div style="margin-bottom: 16px;">
+        <div class="map-route-text" id="modalRouteText">起訖點解析中...</div>
+        <div class="map-sub-info">經由 Google Maps 原生導航服務即時計算推薦行車里程</div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn" style="background:#e5e7eb; color:#374151;" onclick="closeGoogleMapModal()">取消</button>
+        <button class="btn btn-primary" style="padding:8px 22px;" onclick="confirmGoogleDistance()">確認帶入此里程</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 明細 Modal -->
   <div class="modal-overlay" id="detailModal">
     <div class="modal-content">
       <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:14px;">
@@ -712,7 +624,7 @@
 
 <script>
   // =========================================================================
-  // ★ 重要：請在此處貼上你在 Google Apps Script 部署後取得的 Web App URL
+  // ★ Google Maps 測距 API 網址 (已直接寫死在此處)
   // =========================================================================
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbwR7hUAHgKTtQd1AlbLyOUMR2HJDhr5K_uIQU60pGtpesJWSxX-ARXIf5FXNJNQaA/exec";
 
@@ -720,7 +632,6 @@
   const RATE_MOTOR = 3;
   const PROJECTS = ["專案 A - 台北展會", "專案 B - 廠區資安健檢", "公司內部營運", "業務推廣拓展"];
 
-  // 高鐵票價對照表
   const HSR_STATIONS = ["南港", "台北", "板橋", "桃園", "新竹", "苗栗", "台中", "彰化", "雲林", "嘉義", "台南", "左營"];
   const HSR_RESERVED_PRICES = {
     "南港": { "南港":0, "台北":40, "板橋":70, "桃園":200, "新竹":330, "苗栗":480, "台中":750, "彰化":870, "雲林":970, "嘉義":1120, "台南":1390, "左營":1530 },
@@ -751,7 +662,6 @@
     "左營": { "南港":1480, "台北":1445, "板橋":1415, "桃園":1290, "新竹":1160, "苗栗":1030, "台中":765, "彰化":650, "雲林":540, "嘉義":395, "台南":135, "左營":0 }
   };
 
-  // 全台台鐵各縣市車站
   const TRA_COUNTY_MAP = {
     "基隆市": ["基隆", "三坑", "八堵", "七堵", "百福"],
     "新北市": ["五堵", "汐止", "汐科", "板橋", "浮洲", "樹林", "南樹林", "山佳", "鶯歌", "瑞芳", "猴硐", "三貂嶺", "雙溪", "貢寮", "福隆"],
@@ -781,134 +691,77 @@
   };
   const TRA_RATES = { "自強": 2.27, "莒光": 1.75, "區間": 1.46 };
 
-  // 完整四大捷運全路線與站點
   const MRT_DATA = {
     "台北捷運": {
-      "板南線 (藍線)": [
-        "頂埔", "永寧", "土城", "海山", "亞東醫院", "府中", "板橋", "新埔", 
-        "江子翠", "龍山寺", "西門", "台北車站", "善導寺", "忠孝新生", "忠孝復興", 
-        "忠孝敦化", "國父紀念館", "市政府", "永春", "後山埤", "昆陽", "南港", "南港展覽館"
-      ],
-      "淡水信義線 (紅線)": [
-        "淡水", "紅樹林", "竹圍", "關渡", "忠義", "復興崗", "北投", "新北投", 
-        "奇岩", "唭哩岸", "石牌", "明德", "芝山", "士林", "劍潭", "圓山", 
-        "民權西路", "雙連", "中山", "台北車站", "台大醫院", "中正紀念堂", "東門", 
-        "大安森林公園", "大安", "信義安和", "台北101/世貿", "象山"
-      ],
-      "松山新店線 (綠線)": [
-        "松山", "南京三民", "台北小巨蛋", "南京復興", "松江南京", "中山", "北門", 
-        "西門", "小南門", "中正紀念堂", "古亭", "台電大樓", "公館", "萬隆", 
-        "景美", "大坪林", "七張", "小碧潭", "新店區公所", "新店"
-      ],
-      "中和新蘆線 (橘線)": [
-        "蘆洲", "三民高中", "徐匯中學", "三和國中", "三重國小", "迴龍", "丹鳳", 
-        "輔大", "新莊", "頭前庄", "先嗇宮", "三重", "菜寮", "台北橋", "大橋頭", 
-        "民權西路", "中山國小", "行天宮", "松江南京", "忠孝新生", "東門", "古亭", 
-        "頂溪", "永安市場", "景安", "南勢角"
-      ],
-      "文湖線 (棕線)": [
-        "南港展覽館", "南港軟體園區", "東湖", "葫洲", "大湖公園", "內湖", "文德", 
-        "港墘", "西湖", "劍南路", "大直", "松山機場", "中山國中", "南京復興", 
-        "忠孝復興", "大安", "科技大樓", "六張犁", "麟光", "辛亥", "萬芳醫院", 
-        "萬芳社區", "木柵", "動物園"
-      ],
-      "環狀線 (黃線)": [
-        "新北產業園區", "幸福", "頭前庄", "新埔民生", "板橋", "板新", "中原", 
-        "橋和", "中和", "景安", "景平", "秀朗橋", "十四張", "大坪林"
-      ]
+      "板南線 (藍線)": ["頂埔", "永寧", "土城", "海山", "亞東醫院", "府中", "板橋", "新埔", "江子翠", "龍山寺", "西門", "台北車站", "善導寺", "忠孝新生", "忠孝復興", "忠孝敦化", "國父紀念館", "市政府", "永春", "後山埤", "昆陽", "南港", "南港展覽館"],
+      "淡水信義線 (紅線)": ["淡水", "紅樹林", "竹圍", "關渡", "忠義", "復興崗", "北投", "新北投", "奇岩", "唭哩岸", "石牌", "明德", "芝山", "士林", "劍潭", "圓山", "民權西路", "雙連", "中山", "台北車站", "台大醫院", "中正紀念堂", "東門", "大安森林公園", "大安", "信義安和", "台北101/世貿", "象山"],
+      "松山新店線 (綠線)": ["松山", "南京三民", "台北小巨蛋", "南京復興", "松江南京", "中山", "北門", "西門", "小南門", "中正紀念堂", "古亭", "台電大樓", "公館", "萬隆", "景美", "大坪林", "七張", "小碧潭", "新店區公所", "新店"],
+      "中和新蘆線 (橘線)": ["蘆洲", "三民高中", "徐匯中學", "三和國中", "三重國小", "迴龍", "丹鳳", "輔大", "新莊", "頭前庄", "先嗇宮", "三重", "菜寮", "台北橋", "大橋頭", "民權西路", "中山國小", "行天宮", "松江南京", "忠孝新生", "東門", "古亭", "頂溪", "永安市場", "景安", "南勢角"],
+      "文湖線 (棕線)": ["南港展覽館", "南港軟體園區", "東湖", "葫洲", "大湖公園", "內湖", "文德", "港墘", "西湖", "劍南路", "大直", "松山機場", "中山國中", "南京復興", "忠孝復興", "大安", "科技大樓", "六張犁", "麟光", "辛亥", "萬芳醫院", "萬芳社區", "木柵", "動物園"],
+      "環狀線 (黃線)": ["新北產業園區", "幸福", "頭前庄", "新埔民生", "板橋", "板新", "中原", "橋和", "中和", "景安", "景平", "秀朗橋", "十四張", "大坪林"]
     },
     "桃園捷運": {
-      "機場捷運線": [
-        "A1 台北車站", "A2 三重", "A3 新北產業園區", "A4 新莊副都心", "A5 泰山", 
-        "A6 泰山貴和", "A7 體育大學", "A8 長庚醫院", "A9 林口", "A10 山鼻", 
-        "A11 坑口", "A12 第一航廈", "A13 第二航廈", "A14a 機場旅館", "A15 大園", 
-        "A16 橫山", "A17 領航", "A18 高鐵桃園站", "A19 桃園體育園區", "A20 興南", 
-        "A21 環北", "A22 老街溪"
-      ]
+      "機場捷運線": ["A1 台北車站", "A2 三重", "A3 新北產業園區", "A4 新莊副都心", "A5 泰山", "A6 泰山貴和", "A7 體育大學", "A8 長庚醫院", "A9 林口", "A10 山鼻", "A11 坑口", "A12 第一航廈", "A13 第二航廈", "A14a 機場旅館", "A15 大園", "A16 橫山", "A17 領航", "A18 高鐵桃園站", "A19 桃園體育園區", "A20 興南", "A21 環北", "A22 老街溪"]
     },
     "台中捷運": {
-      "綠線 (烏日文心北屯線)": [
-        "北屯總站", "舊社", "松竹", "四維國小", "文心崇德", "文心中清", 
-        "文華高中", "文心櫻花", "市政府", "水安宮", "文心森林公園", "南屯", 
-        "豐樂公園", "大慶", "九張犁", "九德", "烏日", "高鐵台中站"
-      ]
+      "綠線 (烏日文心北屯線)": ["北屯總站", "舊社", "松竹", "四維國小", "文心崇德", "文心中清", "文華高中", "文心櫻花", "市政府", "水安宮", "文心森林公園", "南屯", "豐樂公園", "大慶", "九張犁", "九德", "烏日", "高鐵台中站"]
     },
     "高雄捷運": {
-      "紅線": [
-        "岡山車站", "南岡山", "橋頭火車站", "橋頭糖廠", "青埔", "都會公園", 
-        "後勁", "楠梓科技園區", "油廠國小", "世運", "左營/高鐵", "生態園區", 
-        "巨蛋", "凹子底", "後驛", "高雄車站", "美麗島", "中央公園", "三多商圈", 
-        "獅甲", "凱旋", "前鎮高中", "草衙", "高雄國際機場", "小港"
-      ],
-      "橘線": [
-        "哈瑪星", "市議會", "美麗島", "信義國小", "文化中心", "五塊厝", 
-        "技擊館", "衛武營", "鳳山西站", "鳳山", "大東", "鳳山國中", "大寮"
-      ],
-      "環狀輕軌 (C線)": [
-        "C1 籬仔內", "C2 凱旋瑞田", "C3 前鎮之星", "C4 凱旋中華", "C5 夢時代", 
-        "C6 經貿園區", "C7 軟體園區", "C8 高雄展覽館", "C9 旅運中心", "C10 光榮碼頭", 
-        "C11 真愛碼頭", "C12 駁二大義", "C13 駁二蓬萊", "C14 哈瑪星", "C15 壽山公園", 
-        "C16 文武聖殿", "C17 鼓山區公所", "C18 鼓山", "C19 馬卡道", "C20 台鐵美術館", 
-        "C21 美術館", "C22 聯合醫院", "C23 龍華國小", "C24 愛河之心", "C25 新上國小", 
-        "C26 灣仔內", "C27 鼎山街", "C28 高雄高工", "C29 樹德家商", "C30 科工館", 
-        "C31 聖功醫院", "C32 凱旋公園"
-      ]
+      "紅線": ["岡山車站", "南崗山", "橋頭火車站", "橋頭糖廠", "青埔", "都會公園", "後勁", "楠梓科技園區", "油廠國小", "世運", "左營/高鐵", "生態園區", "巨蛋", "凹子底", "後驛", "高雄車站", "美麗島", "中央公園", "三多商圈", "獅甲", "凱旋", "前鎮高中", "草衙", "高雄國際機場", "小港"],
+      "橘線": ["哈瑪星", "市議會", "美麗島", "信義國小", "文化中心", "五塊厝", "技擊館", "衛武營", "鳳山西站", "鳳山", "大東", "鳳山國中", "大寮"],
+      "環狀輕軌 (C線)": ["C1 籬仔內", "C2 凱旋瑞田", "C3 前鎮之星", "C4 凱旋中華", "C5 夢時代", "C6 經貿園區", "C7 軟體園區", "C8 高雄展覽館", "C9 旅運中心", "C10 光榮碼頭", "C11 真愛碼頭", "C12 駁二大義", "C13 駁二蓬萊", "C14 哈瑪星", "C15 壽山公園", "C16 文武聖殿", "C17 鼓山區公所", "C18 鼓山", "C19 馬卡道", "C20 台鐵美術館", "C21 美術館", "C22 聯合醫院", "C23 龍華國小", "C24 愛河之心", "C25 新上國小", "C26 灣仔內", "C27 鼎山街", "C28 高雄高工", "C29 樹德家商", "C30 科工館", "C31 聖功醫院", "C32 凱旋公園"]
     }
   };
 
-  // 模擬輸出測試資料
-  let REPORT_DATABASE = [
-    {
-      id: 1,
-      applyDate: "2026-09-01",
-      billingMonth: "2026-09",
-      applicant: "測試同仁",
-      project: "專案 A - 台北展會",
-      type: "費用申請",
-      summary: "展會現場文具與佈置材料 + 會議便當餐費",
-      expenseAmount: 1494,
-      travelAmount: 0,
-      totalAmount: 1494,
-      details: [
-        { cat: "辦公用品", desc: "展會識別證帶與文具耗材", inv: "AB-28391024", tax: "54321098", amt: 540 },
-        { cat: "員工福利", desc: "展覽佈置現場會議便當 (8人份)", inv: "CD-90182341", tax: "88990011", amt: 720 },
-        { cat: "硬體維護", desc: "展示螢幕 HDMI 4K 高速傳輸線 x 2", inv: "EF-11223344", tax: "12345678", amt: 234 }
-      ]
-    },
-    {
-      id: 2,
-      applyDate: "2026-09-01",
-      billingMonth: "2026-09",
-      applicant: "測試同仁",
-      project: "專案 A - 台北展會",
-      type: "出差旅費",
-      summary: "台北南港展覽館佈展洽公 (高鐵+捷運+私車里程)",
-      expenseAmount: 2760,
-      travelAmount: 1030,
-      totalAmount: 3790,
-      details: [
-        { cat: "交通-高鐵", desc: "台南站 ➔ 台北站 對號座 來回 (2x)", amt: 2700 },
-        { cat: "交通-捷運", desc: "台北捷運 板南線 (台北車站 ➔ 南港展覽館 來回)", amt: 60 },
-        { cat: "私車公用 (開車)", desc: "善化辦公室 ➔ 台南高鐵站 接送物料往返 (出差, 45km)", amt: 270 },
-        { cat: "交通-計程車", desc: "展館現場搬運展示樣品至會場", inv: "TX-77889900", amt: 760 }
-      ]
-    },
-    {
-      id: 3,
-      applyDate: "2026-09-02",
-      billingMonth: "2026-09",
-      applicant: "測試同仁",
-      project: "專案 B - 廠區資安健檢",
-      type: "出差旅費",
-      summary: "南科園區客戶廠端資安設備巡檢",
-      expenseAmount: 0,
-      travelAmount: 156,
-      totalAmount: 156,
-      details: [
-        { cat: "私機公用 (騎車)", desc: "善化辦公室 ➔ 南科管理局/各廠區 (設備巡檢, 52km)", amt: 156 }
-      ]
-    }
-  ];
+  // 全域資料庫 (強健初始化，避免 localStorage 衝突導致空白)
+  let REPORT_DATABASE = [];
+  try {
+    const saved = localStorage.getItem('REPORT_DB_DRAFT_FINAL');
+    REPORT_DATABASE = saved ? JSON.parse(saved) : null;
+  } catch(e) { REPORT_DATABASE = null; }
+
+  if (!REPORT_DATABASE || !Array.isArray(REPORT_DATABASE) || REPORT_DATABASE.length === 0) {
+    REPORT_DATABASE = [
+      {
+        id: 1,
+        applyDate: "2026-09-01",
+        billingMonth: "2026-09",
+        applicant: "測試同仁",
+        project: "專案 A - 台北展會",
+        type: "費用申請",
+        status: "approved",
+        summary: "展會現場文具與佈置材料 + 會議便當餐費",
+        expenseAmount: 1494,
+        travelAmount: 0,
+        totalAmount: 1494,
+        details: [
+          { cat: "辦公用品", desc: "展會識別證帶與文具耗材", inv: "AB-28391024", tax: "54321098", amt: 540 },
+          { cat: "員工福利", desc: "展覽佈置現場會議便當 (8人份)", inv: "CD-90182341", tax: "88990011", amt: 720 },
+          { cat: "硬體維護", desc: "展示螢幕 HDMI 4K 高速傳輸線 x 2", inv: "EF-11223344", tax: "12345678", amt: 234 }
+        ]
+      },
+      {
+        id: 2,
+        applyDate: "2026-09-01",
+        billingMonth: "2026-09",
+        applicant: "測試同仁",
+        project: "專案 A - 台北展會",
+        type: "出差旅費",
+        status: "approved",
+        summary: "台北南港展覽館佈展洽公 (高鐵+捷運+私車里程)",
+        expenseAmount: 2760,
+        travelAmount: 1030,
+        totalAmount: 3790,
+        details: [
+          { cat: "交通-高鐵", desc: "台南站 ➔ 台北站 對號座 來回 (2x)", amt: 2700 },
+          { cat: "交通-捷運", desc: "台北捷運 板南線 (台北車站 ➔ 南港展覽館 來回)", amt: 60 },
+          { cat: "私車公用 (開車)", desc: "善化辦公室 ➔ 台南高鐵站 接送物料往返 (出差, 45km)", amt: 270 },
+          { cat: "交通-計程車", desc: "展館現場搬運展示樣品至會場", inv: "TX-77889900", amt: 760 }
+        ]
+      }
+    ];
+    localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+  }
 
   window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
@@ -980,16 +833,29 @@
     }
 
     expenseRecords.forEach((r, idx) => {
+      const isDraft = r.status === 'draft';
+      const statusTag = isDraft ? '<span class="tag tag-draft">草稿</span>' : '<span class="tag tag-approved">已核准</span>';
+      
+      let actionBtns = '';
+      if (isDraft) {
+        actionBtns = `
+          <button class="btn" style="background:#2b2b30; color:#60a5fa; padding:3px 8px; margin-right:4px;" onclick="editExpenseDraft(${r.id})">編輯</button>
+          <button class="btn btn-danger" style="padding:3px 8px;" onclick="deleteRecord(${r.id})">刪除</button>
+        `;
+      } else {
+        actionBtns = `<button class="btn" style="background:#2b2b30; color:#ccc; padding:3px 8px;" onclick="viewDetail(${r.id})">詳情</button>`;
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="text-align:center;">${r.id}</td>
         <td>${r.applyDate}</td>
         <td>${r.applicant}</td>
         <td>${r.project || '—'}</td>
-        <td style="text-align:center;"><span class="tag tag-approved">已核准</span></td>
+        <td style="text-align:center;">${statusTag}</td>
         <td style="font-weight:bold; color:var(--blue-stat);">NT$${r.totalAmount.toLocaleString()}</td>
         <td style="text-align:center;">${r.details.length} 筆</td>
-        <td style="text-align:center;"><button class="btn" style="background:#2b2b30; color:#ccc; padding:3px 8px;" onclick="viewDetail(${r.id})">詳情</button></td>
+        <td style="text-align:center;">${actionBtns}</td>
       `;
       tbody.appendChild(tr);
     });
@@ -1006,6 +872,19 @@
     }
 
     travelRecords.forEach((r, idx) => {
+      const isDraft = r.status === 'draft';
+      const statusTag = isDraft ? '<span class="tag tag-draft">草稿</span>' : '<span class="tag tag-approved">已核准</span>';
+      
+      let actionBtns = '';
+      if (isDraft) {
+        actionBtns = `
+          <button class="btn" style="background:#2b2b30; color:#60a5fa; padding:3px 8px; margin-right:4px;" onclick="editTravelDraft(${r.id})">編輯</button>
+          <button class="btn btn-danger" style="padding:3px 8px;" onclick="deleteRecord(${r.id})">刪除</button>
+        `;
+      } else {
+        actionBtns = `<button class="btn" style="background:#2b2b30; color:#ccc; padding:3px 8px;" onclick="viewDetail(${r.id})">詳情</button>`;
+      }
+
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td style="text-align:center;">${r.id}</td>
@@ -1014,15 +893,34 @@
         <td>${r.applyDate}</td>
         <td>${r.project || '—'}</td>
         <td>${r.summary}</td>
-        <td style="text-align:center;"><span class="tag tag-approved">已核准</span></td>
+        <td style="text-align:center;">${statusTag}</td>
         <td style="font-weight:bold; color:var(--warning);">NT$${r.totalAmount.toLocaleString()}</td>
-        <td style="text-align:center;"><button class="btn" style="background:#2b2b30; color:#ccc; padding:3px 8px;" onclick="viewDetail(${r.id})">詳情</button></td>
+        <td style="text-align:center;">${actionBtns}</td>
       `;
       tbody.appendChild(tr);
     });
   }
 
-  function addExpensePureRow() {
+  function startNewExpenseForm() {
+    document.getElementById('expEditingId').value = "";
+    document.getElementById('expFormTitle').innerText = "填寫費用申請單";
+    document.getElementById('expDeleteDraftBtn').style.display = 'none';
+    const tbody = document.querySelector('#pureExpenseTable tbody');
+    tbody.innerHTML = '';
+    addExpensePureRow();
+    calcPureExpTotal();
+    navigate('expense-form');
+  }
+
+  function startNewTravelForm() {
+    document.getElementById('traEditingId').value = "";
+    document.getElementById('traFormTitle').innerText = "出差旅費申請單 (私車公用 / 大眾運輸)";
+    document.getElementById('traDeleteDraftBtn').style.display = 'none';
+    calculateGrandTotal();
+    navigate('travel-form');
+  }
+
+  function addExpensePureRow(data = {}) {
     const tbody = document.querySelector('#pureExpenseTable tbody');
     const tr = document.createElement('tr');
     const today = document.getElementById('expFormDate').value;
@@ -1035,13 +933,14 @@
           <option>證書費/驗證費</option><option>教育訓練相關</option><option>員工福利</option><option>其他</option>
         </select>
       </td>
-      <td><input type="text" class="pure-desc" placeholder="費用說明"></td>
-      <td><input type="date" class="pure-date" value="${today}"></td>
-      <td><input type="text" class="pure-inv" placeholder="發票號碼"></td>
-      <td><input type="text" class="pure-tax" placeholder="8 位數"></td>
-      <td><input type="number" class="pure-amt" placeholder="0" oninput="calcPureExpTotal()"></td>
+      <td><input type="text" class="pure-desc" placeholder="費用說明" value="${data.desc || ''}"></td>
+      <td><input type="date" class="pure-date" value="${data.date || today}"></td>
+      <td><input type="text" class="pure-inv" placeholder="發票號碼" value="${data.inv || ''}"></td>
+      <td><input type="text" class="pure-tax" placeholder="8 位數" value="${data.tax || ''}"></td>
+      <td><input type="number" class="pure-amt" placeholder="0" value="${data.amt || ''}" oninput="calcPureExpTotal()"></td>
       <td style="text-align:center;"><button class="btn btn-danger" onclick="deleteRow(this); calcPureExpTotal();">✕</button></td>
     `;
+    if (data.cat) tr.querySelector('.pure-cat').value = data.cat;
     tbody.appendChild(tr);
   }
 
@@ -1052,11 +951,10 @@
     return total;
   }
 
-  function savePureExpenseForm() {
+  function saveExpenseDraftOrSubmit(isDraft = false) {
     const total = calcPureExpTotal();
     const applicant = document.getElementById('expFormUser').value.trim();
     if (!applicant) { alert('請填寫申請人姓名！'); return; }
-    if (total <= 0) { alert('請填寫至少一筆有金額的明細！'); return; }
 
     const details = [];
     const descs = [];
@@ -1064,31 +962,216 @@
       const amt = parseFloat(row.querySelector('.pure-amt').value) || 0;
       const cat = row.querySelector('.pure-cat').value || '一般費用';
       const desc = row.querySelector('.pure-desc').value || cat;
+      const date = row.querySelector('.pure-date').value;
       const inv = row.querySelector('.pure-inv').value;
       const tax = row.querySelector('.pure-tax').value;
-      if (amt > 0) {
-        details.push({ cat: cat, desc: desc, inv: inv, tax: tax, amt: amt });
-        descs.push(desc);
+      if (amt > 0 || isDraft) {
+        details.push({ cat: cat, desc: desc, date: date, inv: inv, tax: tax, amt: amt });
+        if (desc) descs.push(desc);
       }
     });
 
-    const newRecord = {
-      id: REPORT_DATABASE.length + 1,
+    if (!isDraft && total <= 0) {
+      alert('正式送出時，請填寫至少一筆有金額的費用明細！');
+      return;
+    }
+
+    const editingId = document.getElementById('expEditingId').value;
+    const recordId = editingId ? parseInt(editingId, 10) : (REPORT_DATABASE.length > 0 ? Math.max(...REPORT_DATABASE.map(d=>d.id)) + 1 : 1);
+
+    const recordData = {
+      id: recordId,
       applyDate: document.getElementById('expFormDate').value,
       billingMonth: document.getElementById('expFormDate').value.slice(0, 7),
       applicant: applicant,
       project: document.getElementById('expFormProject').value || '—',
       type: "費用申請",
-      summary: descs.slice(0, 2).join(' + ') || "一般費用申請",
+      status: isDraft ? "draft" : "approved",
+      summary: descs.slice(0, 2).join(' + ') || (isDraft ? "費用草稿" : "一般費用申請"),
       expenseAmount: total,
       travelAmount: 0,
       totalAmount: total,
       details: details
     };
 
-    REPORT_DATABASE.unshift(newRecord);
-    alert('費用申請單已成功儲存！');
+    if (editingId) {
+      const idx = REPORT_DATABASE.findIndex(r => r.id === recordId);
+      if (idx !== -1) REPORT_DATABASE[idx] = recordData;
+    } else {
+      REPORT_DATABASE.unshift(recordData);
+    }
+
+    localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+    alert(isDraft ? '已成功儲存為草稿！' : '費用申請單已正式送出！');
     navigate('expense-list');
+  }
+
+  function editExpenseDraft(id) {
+    const record = REPORT_DATABASE.find(r => r.id === id);
+    if (!record) return;
+
+    document.getElementById('expEditingId').value = record.id;
+    document.getElementById('expFormTitle').innerText = `編輯費用申請單 (草稿 #${record.id})`;
+    document.getElementById('expDeleteDraftBtn').style.display = 'inline-flex';
+    document.getElementById('expFormDate').value = record.applyDate;
+    document.getElementById('expFormUser').value = record.applicant;
+    document.getElementById('expFormProject').value = record.project === '—' ? '' : record.project;
+
+    const tbody = document.querySelector('#pureExpenseTable tbody');
+    tbody.innerHTML = '';
+    if (record.details && record.details.length > 0) {
+      record.details.forEach(d => addExpensePureRow(d));
+    } else {
+      addExpensePureRow();
+    }
+
+    calcPureExpTotal();
+    navigate('expense-form');
+  }
+
+  function deleteCurrentExpenseDraft() {
+    const id = parseInt(document.getElementById('expEditingId').value, 10);
+    if (id && confirm('確定要刪除此筆草稿嗎？')) {
+      REPORT_DATABASE = REPORT_DATABASE.filter(r => r.id !== id);
+      localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+      alert('草稿已刪除');
+      navigate('expense-list');
+    }
+  }
+
+  function saveTravelDraftOrSubmit(isDraft = false) {
+    let sumExpense = 0, sumCar = 0, sumMotor = 0;
+    const details = [];
+    const descs = [];
+    let targetProject = "";
+    const applicant = document.getElementById('traFormUser').value.trim();
+
+    if (!applicant) { alert('請填寫申請人姓名！'); return; }
+
+    document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.expense-amt')?.value) || 0;
+      const cat = row.querySelector('.category-select option:checked')?.text || '大眾運輸';
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
+      let desc = "";
+      const customInput = row.querySelector('.desc-cell input[type=text]');
+      if (customInput) {
+        desc = customInput.value || cat;
+      } else {
+        const selects = Array.from(row.querySelectorAll('.desc-cell select')).map(s => s.options[s.selectedIndex]?.text).filter(t => t && !t.includes('請選擇'));
+        desc = selects.join(' ') || cat;
+      }
+
+      if (amt > 0 || isDraft) {
+        sumExpense += amt;
+        details.push({ cat: cat, desc: desc, amt: amt });
+        if (desc) descs.push(desc);
+      }
+    });
+
+    document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
+      const km = row.querySelector('.mileage-km')?.value || 0;
+      const origin = row.querySelector('.origin-input')?.value || '';
+      const dest = row.querySelector('.dest-input')?.value || '';
+      const reason = row.querySelector('.reason-input')?.value || '出差';
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
+      if (amt > 0 || isDraft) {
+        sumCar += amt;
+        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
+        details.push({ cat: "私車公用 (開車)", desc: fullDesc, amt: amt });
+        if (reason) descs.push(reason);
+      }
+    });
+
+    document.querySelectorAll('#motorMileageTable tbody tr').forEach(row => {
+      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
+      const km = row.querySelector('.mileage-km')?.value || 0;
+      const origin = row.querySelector('.origin-input')?.value || '';
+      const dest = row.querySelector('.dest-input')?.value || '';
+      const reason = row.querySelector('.reason-input')?.value || '行程';
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
+      if (amt > 0 || isDraft) {
+        sumMotor += amt;
+        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
+        details.push({ cat: "私機公用 (騎車)", desc: fullDesc, amt: amt });
+        if (reason) descs.push(reason);
+      }
+    });
+
+    const total = sumExpense + sumCar + sumMotor;
+    if (!isDraft && (total <= 0 || details.length === 0)) {
+      alert('正式送出時，請填寫至少一筆有金額的差旅項目！');
+      return;
+    }
+
+    const editingId = document.getElementById('traEditingId').value;
+    const recordId = editingId ? parseInt(editingId, 10) : (REPORT_DATABASE.length > 0 ? Math.max(...REPORT_DATABASE.map(d=>d.id)) + 1 : 1);
+
+    const recordData = {
+      id: recordId,
+      applyDate: document.getElementById('traApplyDate').value,
+      billingMonth: document.getElementById('traBillingMonth').value,
+      applicant: applicant,
+      project: targetProject || "—",
+      type: "出差旅費",
+      status: isDraft ? "draft" : "approved",
+      summary: descs.slice(0, 2).join(' + ') || (isDraft ? "差旅草稿" : "差旅核銷"),
+      expenseAmount: sumExpense,
+      travelAmount: sumCar + sumMotor,
+      totalAmount: total,
+      details: details
+    };
+
+    if (editingId) {
+      const idx = REPORT_DATABASE.findIndex(r => r.id === recordId);
+      if (idx !== -1) REPORT_DATABASE[idx] = recordData;
+    } else {
+      REPORT_DATABASE.unshift(recordData);
+    }
+
+    localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+    alert(isDraft ? '出差旅費已儲存為草稿！' : '出差旅費申請單已正式送出！');
+    navigate('travel-list');
+  }
+
+  function editTravelDraft(id) {
+    const record = REPORT_DATABASE.find(r => r.id === id);
+    if (!record) return;
+
+    document.getElementById('traEditingId').value = record.id;
+    document.getElementById('traFormTitle').innerText = `編輯出差旅費申請單 (草稿 #${record.id})`;
+    document.getElementById('traDeleteDraftBtn').style.display = 'inline-flex';
+    document.getElementById('traApplyDate').value = record.applyDate;
+    document.getElementById('traBillingMonth').value = record.billingMonth;
+    document.getElementById('traFormUser').value = record.applicant;
+
+    calculateGrandTotal();
+    navigate('travel-form');
+  }
+
+  function deleteCurrentTravelDraft() {
+    const id = parseInt(document.getElementById('traEditingId').value, 10);
+    if (id && confirm('確定要刪除此筆草稿嗎？')) {
+      REPORT_DATABASE = REPORT_DATABASE.filter(r => r.id !== id);
+      localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+      alert('草稿已刪除');
+      navigate('travel-list');
+    }
+  }
+
+  function deleteRecord(id) {
+    if (confirm('確定要刪除這筆草稿嗎？')) {
+      REPORT_DATABASE = REPORT_DATABASE.filter(r => r.id !== id);
+      localStorage.setItem('REPORT_DB_DRAFT_FINAL', JSON.stringify(REPORT_DATABASE));
+      renderExpenseList();
+      renderTravelList();
+    }
   }
 
   function onCategoryChange(selectElem) {
@@ -1301,21 +1384,20 @@
     calculateGrandTotal();
   }
 
-  // =========================================================================
-  // ★ Google Maps 測距服務 (透過 Google Apps Script 執行)
-  // =========================================================================
-  async function fetchDistance(btn, rate) {
+  // ==========================================
+  // Google Maps 測距服務與確認彈窗
+  // ==========================================
+  let activeTargetRow = null;
+  let activeTargetRate = 6;
+  let modalCalculatedKm = 0;
+
+  async function fetchGoogleMapsDistance(btn, rate) {
     const row = btn.closest('tr');
     const origin = row.querySelector('.origin-input').value.trim();
     const dest = row.querySelector('.dest-input').value.trim();
 
     if (!origin || !dest) {
       alert('請先填寫出發地點與目的地點 (如: 台中高鐵站, 台北高鐵站)');
-      return;
-    }
-
-    if (!GAS_API_URL || GAS_API_URL.includes("請在此處貼上")) {
-      alert('請先在程式碼中的 GAS_API_URL 變數填入您在 Apps Script 取得的部署網址！');
       return;
     }
 
@@ -1331,24 +1413,39 @@
       const result = await response.json();
 
       if (result.success && result.distanceKm) {
-        const realOneWayKm = result.distanceKm;
-        row.querySelector('.base-one-way-km').value = realOneWayKm;
-        
-        const multiplier = parseInt(row.querySelector('.trip-type-select').value, 10);
-        const totalKm = Math.round(realOneWayKm * multiplier * 10) / 10;
+        activeTargetRow = row;
+        activeTargetRate = rate;
+        modalCalculatedKm = result.distanceKm;
 
-        row.querySelector('.mileage-km').value = totalKm;
-        row.querySelector('.mileage-amt').value = Math.round(totalKm * rate);
-        calculateGrandTotal();
+        document.getElementById('modalKmNumber').innerText = `${result.distanceKm} km`;
+        document.getElementById('modalRouteText').innerText = `${origin} ➔ ${dest}`;
+        document.getElementById('googleMapModal').style.display = 'flex';
       } else {
         alert(`Google Maps 測距提示：${result.error || '查無路徑'}，請確認地名或手動填寫。`);
       }
     } catch (err) {
-      alert('無法連線至 Google Apps Script 測距服務，請確認網址與權限是否設定為「所有人 (Anyone)」。');
+      alert('無法連線至 Google Apps Script 測距服務，請確認網路或 GAS 部署設定。');
     } finally {
       btn.innerText = '測距';
       btn.disabled = false;
     }
+  }
+
+  function confirmGoogleDistance() {
+    if (activeTargetRow && modalCalculatedKm > 0) {
+      activeTargetRow.querySelector('.base-one-way-km').value = modalCalculatedKm;
+      const multiplier = parseInt(activeTargetRow.querySelector('.trip-type-select').value, 10);
+      const totalKm = Math.round(modalCalculatedKm * multiplier * 10) / 10;
+
+      activeTargetRow.querySelector('.mileage-km').value = totalKm;
+      activeTargetRow.querySelector('.mileage-amt').value = Math.round(totalKm * activeTargetRate);
+      calculateGrandTotal();
+    }
+    closeGoogleMapModal();
+  }
+
+  function closeGoogleMapModal() {
+    document.getElementById('googleMapModal').style.display = 'none';
   }
 
   function onTripTypeChange(selectElem, rate) {
@@ -1403,11 +1500,12 @@
       <td><input type="text" class="origin-input" placeholder="出發地點 (如: 台中高鐵站)"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點 (如: 台北高鐵站)"></td>
       <td><input type="text" class="reason-input" placeholder="出差事由"></td>
-      <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
+      <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchGoogleMapsDistance(this, 6)">測距</button></td>
       <td>
         <input type="hidden" class="base-one-way-km" value="0">
         <select class="trip-type-select" onchange="onTripTypeChange(this, 6)">
-          <option value="1">單程 (1x)</option><option value="2">來回 (2x)</option>
+          <option value="1">單程 (1x)</option>
+          <option value="2">來回 (2x)</option>
         </select>
       </td>
       <td><input type="number" class="mileage-km" placeholder="0" oninput="onManualKmInput(this, 6)"></td>
@@ -1428,11 +1526,12 @@
       <td><input type="text" class="origin-input" placeholder="出發地點"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點"></td>
       <td><input type="text" class="reason-input" placeholder="行程事由"></td>
-      <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button></td>
+      <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchGoogleMapsDistance(this, 3)">測距</button></td>
       <td>
         <input type="hidden" class="base-one-way-km" value="0">
         <select class="trip-type-select" onchange="onTripTypeChange(this, 3)">
-          <option value="1">單程 (1x)</option><option value="2">來回 (2x)</option>
+          <option value="1">單程 (1x)</option>
+          <option value="2">來回 (2x)</option>
         </select>
       </td>
       <td><input type="number" class="mileage-km" placeholder="0" oninput="onManualKmInput(this, 3)"></td>
@@ -1489,96 +1588,7 @@
     document.getElementById('grandTotal').innerText = `NT$ ${grand.toLocaleString()}`;
   }
 
-  function submitTravelForm() {
-    let sumExpense = 0, sumCar = 0, sumMotor = 0;
-    const details = [];
-    const descs = [];
-    let targetProject = "";
-    const applicant = document.getElementById('traFormUser').value.trim();
-
-    if (!applicant) { alert('請填寫申請人姓名！'); return; }
-
-    document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.expense-amt')?.value) || 0;
-      const cat = row.querySelector('.category-select option:checked')?.text || '大眾運輸';
-      const proj = row.querySelector('.proj-select')?.value;
-      if (proj && !targetProject) targetProject = proj;
-
-      let desc = "";
-      const customInput = row.querySelector('.desc-cell input[type=text]');
-      if (customInput) {
-        desc = customInput.value || cat;
-      } else {
-        const selects = Array.from(row.querySelectorAll('.desc-cell select')).map(s => s.options[s.selectedIndex]?.text).filter(t => t && !t.includes('請選擇'));
-        desc = selects.join(' ') || cat;
-      }
-
-      if (amt > 0) {
-        sumExpense += amt;
-        details.push({ cat: cat, desc: desc, amt: amt });
-        descs.push(desc);
-      }
-    });
-
-    document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
-      const km = row.querySelector('.mileage-km')?.value || 0;
-      const origin = row.querySelector('.origin-input')?.value || '';
-      const dest = row.querySelector('.dest-input')?.value || '';
-      const reason = row.querySelector('.reason-input')?.value || '出差';
-      const proj = row.querySelector('.proj-select')?.value;
-      if (proj && !targetProject) targetProject = proj;
-
-      if (amt > 0) {
-        sumCar += amt;
-        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
-        details.push({ cat: "私車公用 (開車)", desc: fullDesc, amt: amt });
-        descs.push(reason);
-      }
-    });
-
-    document.querySelectorAll('#motorMileageTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
-      const km = row.querySelector('.mileage-km')?.value || 0;
-      const origin = row.querySelector('.origin-input')?.value || '';
-      const dest = row.querySelector('.dest-input')?.value || '';
-      const reason = row.querySelector('.reason-input')?.value || '行程';
-      const proj = row.querySelector('.proj-select')?.value;
-      if (proj && !targetProject) targetProject = proj;
-
-      if (amt > 0) {
-        sumMotor += amt;
-        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
-        details.push({ cat: "私機公用 (騎車)", desc: fullDesc, amt: amt });
-        descs.push(reason);
-      }
-    });
-
-    const total = sumExpense + sumCar + sumMotor;
-    if (total <= 0 || details.length === 0) {
-      alert('請填寫至少一筆有金額的差旅項目！');
-      return;
-    }
-
-    const newRecord = {
-      id: REPORT_DATABASE.length + 1,
-      applyDate: document.getElementById('traApplyDate').value,
-      billingMonth: document.getElementById('traBillingMonth').value,
-      applicant: applicant,
-      project: targetProject || "—",
-      type: "出差旅費",
-      summary: descs.slice(0, 2).join(' + ') || "差旅核銷",
-      expenseAmount: sumExpense,
-      travelAmount: sumCar + sumMotor,
-      totalAmount: total,
-      details: details
-    };
-
-    REPORT_DATABASE.unshift(newRecord);
-    alert('出差旅費申請單已成功送出！');
-    navigate('travel-list');
-  }
-
+  // 渲染月報表 (自動排除草稿)
   function renderReportTable() {
     const selYear = document.getElementById('filterYear').value;
     const selMonth = document.getElementById('filterMonth').value;
@@ -1589,6 +1599,7 @@
     tbody.innerHTML = '';
 
     const filtered = REPORT_DATABASE.filter(item => {
+      if (item.status === 'draft') return false; // 排除草稿
       const [iYear, iMonth] = item.billingMonth.split('-');
       if (selYear && iYear !== selYear) return false;
       if (selMonth !== 'ALL' && iMonth !== selMonth) return false;
@@ -1597,7 +1608,7 @@
     });
 
     if (!filtered.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777; padding:20px;">無符合條件的月報資料</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#777; padding:20px;">無符合條件的正式月報資料 (草稿不納入計算)</td></tr>`;
     } else {
       filtered.forEach((item, idx) => {
         totalExp += item.expenseAmount;
@@ -1649,7 +1660,7 @@
     document.getElementById('modalTitle').innerText = `${record.applicant} - ${record.billingMonth} 申請明細`;
     let html = `
       <div style="margin-bottom:12px; color:#aaa;">
-        <strong>申請日期：</strong>${record.applyDate} | <strong>類型：</strong>${record.type} | <strong>關聯專案：</strong>${record.project || '—'} | <strong>總金額：</strong>NT$${record.totalAmount.toLocaleString()}
+        <strong>申請日期：</strong>${record.applyDate} | <strong>類型：</strong>${record.type} | <strong>狀態：</strong>${record.status === 'draft' ? '草稿' : '已核准'} | <strong>總金額：</strong>NT$${record.totalAmount.toLocaleString()}
       </div>
       <table class="dynamic-table">
         <thead><tr><th style="width:25%;">類別</th><th style="width:55%;">說明與事由</th><th style="width:20%; text-align:right;">金額</th></tr></thead>
@@ -1665,7 +1676,7 @@
 
   function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
 
-  // PDF 匯出（商務美化版）
+  // PDF 匯出 (自動排除草稿)
   function exportReportToPDF() {
     const selYear = document.getElementById('filterYear').value;
     const selMonth = document.getElementById('filterMonth').value;
@@ -1678,6 +1689,7 @@
     document.getElementById('pdfApplicantName').innerText = selApplicant;
 
     const filtered = REPORT_DATABASE.filter(item => {
+      if (item.status === 'draft') return false; // PDF 排除草稿
       const [iYear, iMonth] = item.billingMonth.split('-');
       if (selYear && iYear !== selYear) return false;
       if (selMonth !== 'ALL' && iMonth !== selMonth) return false;
@@ -1691,7 +1703,7 @@
     printContainer.innerHTML = '';
 
     if (filtered.length === 0) {
-      printContainer.innerHTML = `<p style="color:#666; font-size:8.5pt;">查無核銷明細資料</p>`;
+      printContainer.innerHTML = `<p style="color:#666; font-size:8.5pt;">查無正式核銷明細資料</p>`;
     } else {
       filtered.forEach((r, idx) => {
         let detailsHtml = `
