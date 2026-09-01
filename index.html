@@ -79,6 +79,8 @@
     .btn-danger:hover { background-color: var(--danger); color: white; }
     .btn-green { background-color: var(--success); color: white; }
     .btn-green:hover { background-color: #059669; }
+    .btn-calc { background-color: #383838; color: #9cdcfe; border: 1px solid #555; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; white-space: nowrap; }
+    .btn-calc:hover { background-color: #4a4a4a; }
 
     .dynamic-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem; }
     .dynamic-table th { background-color: #18181c; color: #aaa; font-weight: 500; font-size: 0.8rem; text-align: left; padding: 10px 8px; border: 1px solid var(--border-color); }
@@ -374,7 +376,7 @@
               <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
               <td><input type="text" class="origin-input" placeholder="出發地點"></td>
               <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-              <td><input type="text" placeholder="出差事由"></td>
+              <td><input type="text" class="reason-input" placeholder="出差事由"></td>
               <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
               <td>
                 <input type="hidden" class="base-one-way-km" value="0">
@@ -415,7 +417,7 @@
               <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
               <td><input type="text" class="origin-input" placeholder="出發地點"></td>
               <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-              <td><input type="text" placeholder="行程事由"></td>
+              <td><input type="text" class="reason-input" placeholder="行程事由"></td>
               <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button></td>
               <td>
                 <input type="hidden" class="base-one-way-km" value="0">
@@ -555,7 +557,6 @@
   const RATE_MOTOR = 3;
   const PROJECTS = ["專案 A - 台北展會", "專案 B - 廠區資安健檢", "公司內部營運", "業務推廣拓展"];
 
-  // 高鐵站點與票價
   const HSR_STATIONS = ["南港", "台北", "板橋", "桃園", "新竹", "苗栗", "台中", "彰化", "雲林", "嘉義", "台南", "左營"];
   const HSR_RESERVED_PRICES = {
     "南港": { "南港":0, "台北":40, "板橋":70, "桃園":200, "新竹":330, "苗栗":480, "台中":750, "彰化":870, "雲林":970, "嘉義":1120, "台南":1390, "左營":1530 },
@@ -586,7 +587,6 @@
     "左營": { "南港":1480, "台北":1445, "板橋":1415, "桃園":1290, "新竹":1160, "苗栗":1030, "台中":765, "彰化":650, "雲林":540, "嘉義":395, "台南":135, "左營":0 }
   };
 
-  // 全台完整台鐵車站清單 (包含全部縣市)
   const TRA_COUNTY_MAP = {
     "基隆市": ["基隆", "三坑", "八堵", "七堵", "百福"],
     "新北市": ["五堵", "汐止", "汐科", "板橋", "浮洲", "樹林", "南樹林", "山佳", "鶯歌", "瑞芳", "猴硐", "三貂嶺", "雙溪", "貢寮", "福隆"],
@@ -616,7 +616,6 @@
   };
   const TRA_RATES = { "自強": 2.27, "莒光": 1.75, "區間": 1.46 };
 
-  // 捷運完整站點
   const MRT_DATA = {
     "台北捷運": {
       "板南線 (藍線)": ["頂埔", "永寧", "土城", "海山", "亞東醫院", "府中", "板橋", "新埔", "江子翠", "龍山寺", "西門", "台北車站", "善導寺", "忠孝新生", "忠孝復興", "忠孝敦化", "國父紀念館", "市政府", "永春", "後山埤", "昆陽", "南港", "南港展覽館"],
@@ -638,8 +637,7 @@
     }
   };
 
-  // 全域資料庫（完全預設為空）
-  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_PROD')) || [];
+  let REPORT_DATABASE = JSON.parse(localStorage.getItem('REPORT_DB_PROD_V4')) || [];
 
   window.addEventListener('DOMContentLoaded', () => {
     const today = new Date();
@@ -690,7 +688,6 @@
     }
   }
 
-  // 渲染費用申請列表
   function renderExpenseList() {
     const tbody = document.getElementById('expenseListBody');
     tbody.innerHTML = '';
@@ -717,7 +714,6 @@
     });
   }
 
-  // 渲染出差旅費列表
   function renderTravelList() {
     const tbody = document.getElementById('travelListBody');
     tbody.innerHTML = '';
@@ -808,7 +804,7 @@
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_PROD', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD_V4', JSON.stringify(REPORT_DATABASE));
     alert('費用申請單已成功儲存！');
     navigate('expense-list');
   }
@@ -869,9 +865,7 @@
     const counties = Object.keys(TRA_COUNTY_MAP);
     descCell.innerHTML = `
       <div class="selector-box">
-        <select class="tra-type" onchange="updateTraPrice(this)" style="width: 80px;">
-          <option value="自強">自強號</option><option value="莒光">莒光號</option><option value="區間">區間車</option>
-        </select>
+        <select class="tra-type" onchange="updateTraPrice(this)" style="width: 80px;"><option value="自強">自強號</option><option value="莒光">莒光號</option><option value="區間">區間車</option></select>
         <select class="tra-from-c" onchange="onTraCountyChange(this, 'from')" style="width: 100px;">
           <option value="">— 出發縣市 —</option>${counties.map(c => `<option value="${c}">${c}</option>`).join('')}
         </select>
@@ -1094,7 +1088,7 @@
       <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
       <td><input type="text" class="origin-input" placeholder="出發地點"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-      <td><input type="text" placeholder="出差事由"></td>
+      <td><input type="text" class="reason-input" placeholder="出差事由"></td>
       <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 6)">測距</button></td>
       <td>
         <input type="hidden" class="base-one-way-km" value="0">
@@ -1119,7 +1113,7 @@
       <td><select class="proj-select mil-proj" onchange="calculateGrandTotal()"></select></td>
       <td><input type="text" class="origin-input" placeholder="出發地點"></td>
       <td><input type="text" class="dest-input" placeholder="目的地點"></td>
-      <td><input type="text" placeholder="行程事由"></td>
+      <td><input type="text" class="reason-input" placeholder="行程事由"></td>
       <td style="text-align:center;"><button type="button" class="btn-calc" onclick="fetchDistance(this, 3)">測距</button></td>
       <td>
         <input type="hidden" class="base-one-way-km" value="0">
@@ -1181,60 +1175,95 @@
     document.getElementById('grandTotal').innerText = `NT$ ${grand.toLocaleString()}`;
   }
 
+  // 修正後的送出差旅申請單邏輯
   function submitTravelForm() {
     let sumExpense = 0, sumCar = 0, sumMotor = 0;
     const details = [];
     const descs = [];
+    let targetProject = "";
 
+    // 1. 抓取大眾運輸明細
     document.querySelectorAll('#traExpenseTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.expense-amt').value) || 0;
+      const amt = parseFloat(row.querySelector('.expense-amt')?.value) || 0;
       const cat = row.querySelector('.category-select option:checked')?.text || '大眾運輸';
-      let desc = row.querySelector('.desc-cell input[type=text]')?.value || "交通票價";
-      if (amt > 0) { details.push({ cat: cat, desc: desc, amt: amt }); descs.push(cat); }
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
+      let desc = "";
+      const customInput = row.querySelector('.desc-cell input[type=text]');
+      if (customInput) {
+        desc = customInput.value || cat;
+      } else {
+        // 若為下拉選單結構 (高鐵/台鐵/捷運)
+        const selects = Array.from(row.querySelectorAll('.desc-cell select')).map(s => s.options[s.selectedIndex]?.text).filter(t => t && !t.includes('請選擇'));
+        desc = selects.join(' ') || cat;
+      }
+
+      if (amt > 0) {
+        sumExpense += amt;
+        details.push({ cat: cat, desc: desc, amt: amt });
+        descs.push(desc);
+      }
     });
 
+    // 2. 抓取開車里程
     document.querySelectorAll('#carMileageTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.mileage-amt').value) || 0;
-      const km = row.querySelector('.mileage-km').value;
-      const origin = row.querySelector('.origin-input').value;
-      const dest = row.querySelector('.dest-input').value;
-      const reason = row.querySelector('input[placeholder="出差事由"]').value || "開車出差";
+      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
+      const km = row.querySelector('.mileage-km')?.value || 0;
+      const origin = row.querySelector('.origin-input')?.value || '';
+      const dest = row.querySelector('.dest-input')?.value || '';
+      const reason = row.querySelector('.reason-input')?.value || '出差';
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
       if (amt > 0) {
-        details.push({ cat: "私車公用 (開車)", desc: `${origin} ➔ ${dest} (${reason}, ${km}km)`, amt: amt });
+        sumCar += amt;
+        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
+        details.push({ cat: "私車公用 (開車)", desc: fullDesc, amt: amt });
         descs.push(reason);
       }
     });
 
+    // 3. 抓取騎車里程
     document.querySelectorAll('#motorMileageTable tbody tr').forEach(row => {
-      const amt = parseFloat(row.querySelector('.mileage-amt').value) || 0;
-      const km = row.querySelector('.mileage-km').value;
-      const origin = row.querySelector('.origin-input').value;
-      const dest = row.querySelector('.dest-input').value;
-      const reason = row.querySelector('input[placeholder="行程事由"]').value || "騎車出差";
+      const amt = parseFloat(row.querySelector('.mileage-amt')?.value) || 0;
+      const km = row.querySelector('.mileage-km')?.value || 0;
+      const origin = row.querySelector('.origin-input')?.value || '';
+      const dest = row.querySelector('.dest-input')?.value || '';
+      const reason = row.querySelector('.reason-input')?.value || '行程';
+      const proj = row.querySelector('.proj-select')?.value;
+      if (proj && !targetProject) targetProject = proj;
+
       if (amt > 0) {
-        details.push({ cat: "私機公用 (騎車)", desc: `${origin} ➔ ${dest} (${reason}, ${km}km)`, amt: amt });
+        sumMotor += amt;
+        const fullDesc = (origin && dest) ? `${origin} ➔ ${dest} (${reason}, ${km}km)` : `${reason} (${km}km)`;
+        details.push({ cat: "私機公用 (騎車)", desc: fullDesc, amt: amt });
         descs.push(reason);
       }
     });
 
     const total = sumExpense + sumCar + sumMotor;
-    if (total <= 0) { alert('請填寫至少一筆有金額的差旅項目！'); return; }
+    if (total <= 0 || details.length === 0) {
+      alert('請填寫至少一筆有金額的差旅項目！');
+      return;
+    }
 
     const newRecord = {
       id: REPORT_DATABASE.length + 1,
       applyDate: document.getElementById('traApplyDate').value,
       billingMonth: document.getElementById('traBillingMonth').value,
       applicant: document.getElementById('traFormUser').value || "郭楚葳",
+      project: targetProject || "—",
       type: "出差旅費",
-      summary: descs.slice(0, 2).join(' + ') || "出差行程核銷",
+      summary: descs.slice(0, 2).join(' + ') || "差旅核銷",
       expenseAmount: sumExpense,
-      travelAmount: total - sumExpense,
+      travelAmount: sumCar + sumMotor,
       totalAmount: total,
       details: details
     };
 
     REPORT_DATABASE.unshift(newRecord);
-    localStorage.setItem('REPORT_DB_PROD', JSON.stringify(REPORT_DATABASE));
+    localStorage.setItem('REPORT_DB_PROD_V4', JSON.stringify(REPORT_DATABASE));
     alert('出差旅費申請單已成功送出！');
     navigate('travel-list');
   }
@@ -1325,7 +1354,6 @@
 
   function closeModal() { document.getElementById('detailModal').style.display = 'none'; }
 
-  // PDF 匯出（包含月報統計 + 展開每一筆明細）
   function exportReportToPDF() {
     const selYear = document.getElementById('filterYear').value;
     const selMonth = document.getElementById('filterMonth').value;
